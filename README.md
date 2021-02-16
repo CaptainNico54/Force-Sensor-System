@@ -1,4 +1,4 @@
-# Print-Load-Sensor
+# Print Load Sensor
 Load cell board and code for detecting forces during 3D printing
 
 This project was originally created by Master Photonster [@CaptainNico54](https://github.com/CaptainNico54) for his custom high end MSLA machine. 
