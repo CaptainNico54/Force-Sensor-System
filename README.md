@@ -9,6 +9,7 @@ Load cell board and code for detecting forces during 3D printing
 
 This project was originally created by @CaptainNico54 for his custom high end MSLA machine. 
 
-![image](https://user-images.githubusercontent.com/11083514/108006127-893a4c00-6ff2-11eb-8f75-068809b5e353.png)
+![IForce Sensor Board V0.1 - 201221](https://user-images.githubusercontent.com/11083514/108006384-3745f600-6ff3-11eb-9602-5a572f8bd7b7.jpg)
+
 
 
