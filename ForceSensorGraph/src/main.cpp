@@ -70,7 +70,6 @@ void setup()
   char msg[50];
   tft.setRotation(3);
   sprintf(msg, "Initialized %dx%d TFT screen.", tft.width(), tft.height());
-  //Serial.print("Initialized "); Serial.print(tft.width());
   Serial.println(msg);
   tft.fillScreen(BLACK);
 }
@@ -80,16 +79,15 @@ void loop(void)
   // Read data and throw it at the screen forever
 
   static boolean newDataReady = 0;
-  const int dataInterval = 250; //increase value to slow down graph/serial activity
+  const int dataInterval = 250; // Change value (ms) to sensor/graph update frequency
 
-  // check for new data/start next conversion:
+  // Check for new data/start next conversion:
   if (hx711a.update())
     newDataReady = true;
 
   // Start over from X = 0 when time falls off the right side of the graph:
   if (t > xLabelHi)
   {
-    
     t_offset += t; // Remember how many minutes have elapsed so far
     t = 0;         // Reset the minute timer
     Serial.println("Starting graph over!");
@@ -98,21 +96,22 @@ void loop(void)
     yLabelsDraw = true;
   }
 
-  // get smoothed value from the dataset:
+  // Get smoothed value from the dataset:
   if (newDataReady)
   {
     // All of the time-based logic will blow up when millis() overflows (~49 days).
-    // TODO: fix that.
+    // TODO: Fix that.
     if (millis() > (((t + t_offset) * 60000) + dataInterval))
     {
       force = (hx711a.getData() - 8528800) / 50; // Kludgy tare + normalization for now
-      t = ((float)millis()) / 60000 - t_offset;  // Repeating Elapsed time in minutes
+      t = ((float)millis()) / 60000 - t_offset;  // Repeating elapsed time in minutes
       Serial.print("Load cell output: ");
       Serial.print(t);
       Serial.print(", ");
       Serial.println(force);
       newDataReady = 0;
 
+      // Draw a line on the TFT between the last (t, force) point and the current one.
       Graph(tft, t, force, graphX, graphY, graphW, graphH, xLabelLo, xLabelHi, xIncr,
             yLabelLo, yLabelHi, yIncr, title, xTitle, yTitle,
             DKBLUE, RED, YELLOW, WHITE, BLACK, xLabelsDraw, yLabelsDraw);
