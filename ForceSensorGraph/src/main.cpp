@@ -10,8 +10,8 @@ It's set up to use hardware SPI.  Look in pins.h to define the TFT pins for CS, 
 
 The Graph() function in graph.h is customized from Kris Kasprzak's here:
 https://github.com/KrisKasprzak/GraphingFunction/blob/master/Graph.ino
-
 */
+
 #include <Arduino.h>
 #include <SPI.h>
 #include <Adafruit_ILI9341.h>
