@@ -62,11 +62,11 @@ void setup()
 
   // Initialize the screen
   tft.begin();
-  tftX = tft.height();                        // set X pixel dimension based on orientation
-  tftY = tft.width();                         // set Y pixel dimention based on orientation
+  tftX = tft.height();                        // The X direction is the hardware's height
+  tftY = tft.width();                         // The Y direction is the hardware's width
   graphY = tftY - xLabelMargin;               // Graph location (lower left)
-  graphW = tftX - yLabelMargin - rightMargin; // Graph height
-  graphH = tftY - xLabelMargin - titleMargin; // Graph height
+  graphW = tftX - yLabelMargin - rightMargin; // Graph width (X)
+  graphH = tftY - xLabelMargin - titleMargin; // Graph height (Y)
   char msg[50];
   tft.setRotation(3);
   sprintf(msg, "Initialized %dx%d TFT screen.", tft.width(), tft.height());

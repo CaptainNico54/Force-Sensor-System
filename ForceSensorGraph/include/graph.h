@@ -15,26 +15,26 @@ https://github.com/KrisKasprzak/GraphingFunction/blob/master/Graph.ino
 float ox, oy; // old x, y coords
 
 // Initialize these next five vars in main.cpp, after instantiating the ILI9341 object:
-float tftX = 320; // TFT resolution in X direction
-float tftY = 240; // TFT resoluiton in Y direction
-float graphY;               // Graph location (lower left)
+float tftX;   // TFT resolution in X direction
+float tftY;   // TFT resoluiton in Y direction
+float graphY; // Graph location (lower left)
 float graphW; // Graph height
 float graphH; // Graph height
 
 // Declare/set/pre-compute some graph parameters:
-float titleMargin = 20.;                          // Title space height in pixels
-boolean yLabelsDraw = true;                       // Draw the Y labels or not?
-float yLabelMargin = 30.;                         // Y label space in pixels
-float yLabelLo = -100.;                           // Lower Y label (axis units)
-float yLabelHi = 100.;                            // Upper Y label (axis units)
-float yIncr = 25;                                // Y label increment (axis units)
-boolean xLabelsDraw = true;                       // Draw the X labels or not?
-float xLabelMargin = 25.;                         // X label space in pixels
-float xLabelLo = 0.;                              // Lower X label (axis units)
-float xLabelHi = 5.;                              // Upper X label (axis units)
-float xIncr = 1.;                                 // X label increment (axis units)
-float rightMargin = 5.;                           // Space to right of graph in pixels
-float graphX = yLabelMargin;                      // Graph location (lower left)
+float titleMargin = 20.;     // Title space height in pixels
+boolean yLabelsDraw = true;  // Draw the Y labels or not?
+float yLabelMargin = 30.;    // Y label space in pixels
+float yLabelLo = -100.;      // Lower Y label (axis units)
+float yLabelHi = 100.;       // Upper Y label (axis units)
+float yIncr = 25;            // Y label increment (axis units)
+boolean xLabelsDraw = true;  // Draw the X labels or not?
+float xLabelMargin = 25.;    // X label space in pixels
+float xLabelLo = 0.;         // Lower X label (axis units)
+float xLabelHi = 5.;         // Upper X label (axis units)
+float xIncr = 1.;            // X label increment (axis units)
+float rightMargin = 5.;      // Space to right of graph in pixels
+float graphX = yLabelMargin; // Graph location (lower left)
 String title = "Load Cell A";
 String yTitle = "Force";
 String xTitle = "Time (m)";
