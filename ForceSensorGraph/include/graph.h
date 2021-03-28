@@ -7,7 +7,6 @@ https://www.apache.org/licenses/LICENSE-2.0.txt
 
 This Graph() function is customized from Kris Kasprzak's here:
 https://github.com/KrisKasprzak/GraphingFunction/blob/master/Graph.ino
-
 */
 
 #include <Adafruit_ILI9341.h>
@@ -17,6 +16,7 @@ float ox, oy; // old x, y coords
 // Initialize these next five vars in main.cpp, after instantiating the ILI9341 object:
 float tftX;   // TFT resolution in X direction
 float tftY;   // TFT resoluiton in Y direction
+float graphX; // Graph location (lower left)
 float graphY; // Graph location (lower left)
 float graphW; // Graph height
 float graphH; // Graph height
@@ -34,7 +34,7 @@ float xLabelLo = 0.;         // Lower X label (axis units)
 float xLabelHi = 5.;         // Upper X label (axis units)
 float xIncr = 1.;            // X label increment (axis units)
 float rightMargin = 5.;      // Space to right of graph in pixels
-float graphX = yLabelMargin; // Graph location (lower left)
+
 String title = "Load Cell A";
 String yTitle = "Force";
 String xTitle = "Time (m)";

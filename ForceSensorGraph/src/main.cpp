@@ -64,6 +64,7 @@ void setup()
   tft.begin();
   tftX = tft.height();                        // The X direction is the hardware's height
   tftY = tft.width();                         // The Y direction is the hardware's width
+  graphX = yLabelMargin;                      // Graph location (lower left)
   graphY = tftY - xLabelMargin;               // Graph location (lower left)
   graphW = tftX - yLabelMargin - rightMargin; // Graph width (X)
   graphH = tftY - xLabelMargin - titleMargin; // Graph height (Y)
@@ -79,7 +80,7 @@ void loop(void)
   // Read data and throw it at the screen forever
 
   static boolean newDataReady = 0;
-  const int dataInterval = 250; // Change value (ms) to sensor/graph update frequency
+  const int dataInterval = 250; // Sensor/graph update interval (ms)
 
   // Check for new data/start next conversion:
   if (hx711a.update())
