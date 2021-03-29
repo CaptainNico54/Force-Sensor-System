@@ -23,5 +23,5 @@ Requires load cell board, hx711 load cell, and serial SPI ILI9341 screen.  If yo
 | GND (Black) | GND |
 
 Also jump VCC over to the LED pin on the TFT. If your MCU is 5V, and your screen only accepts 3.3V logic, you also need at least 5 channels of logic conversion for MOSI, MISO, SCK, SCL(CS), and SDA(D/C).
-![TFT Wiring](test/InkedTFT.jpg =600x)
+![TFT Wiring](test/InkedTFT.jpg =800x1200)
 ![TFT Load Cell Graphing](test/Breadboard.jpeg)
