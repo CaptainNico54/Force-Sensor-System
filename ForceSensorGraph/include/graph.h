@@ -12,10 +12,11 @@ https://github.com/KrisKasprzak/GraphingFunction/blob/master/Graph.ino
 #include <Adafruit_ILI9341.h>
 
 float ox, oy; // old x, y coords
+int yTick, xTick, cursorNudge;
 
 // Initialize these next five vars in main.cpp, after instantiating the ILI9341 object:
 float tftX;   // TFT resolution in X direction
-float tftY;   // TFT resoluiton in Y direction
+float tftY;   // TFT resoluton in Y direction
 float graphX; // Graph location (lower left)
 float graphY; // Graph location (lower left)
 float graphW; // Graph height
@@ -24,16 +25,16 @@ float graphH; // Graph height
 // Declare/set/pre-compute some graph parameters:
 float titleMargin = 20.;    // Title space height in pixels
 boolean yLabelsDraw = true; // Draw the Y labels or not?
-float yLabelMargin = 30.;   // Y label space in pixels
+float yLabelMargin = 25.;   // Y label space in pixels
 float yLabelLo = -100.;     // Lower Y label (axis units)
 float yLabelHi = 100.;      // Upper Y label (axis units)
 float yIncr = 25;           // Y label increment (axis units)
 boolean xLabelsDraw = true; // Draw the X labels or not?
 float xLabelMargin = 25.;   // X label space in pixels
 float xLabelLo = 0.;        // Lower X label (axis units)
-float xLabelHi = 120.;      // Upper X label (axis units)
-float xIncr = 20.;          // X label increment (axis units)
-float rightMargin = 5.;    // Space to right of graph in pixels
+float xLabelHi = 90.;      // Upper X label (axis units)
+float xIncr = 30.;          // X label increment (axis units)
+float rightMargin = 5.;     // Space to right of graph in pixels
 
 String title = "Load Cell A";
 String yTitle = "Force";
@@ -101,9 +102,25 @@ void Graph(Adafruit_ILI9341 &d, float x, float y, float gx, float gy, float w, f
             {
                 d.drawLine(gx, temp, gx + w, temp, gcolor);
             }
-            d.setTextSize(1);
+            // Size = 1 characters are 5x8 px
+            d.setTextSize(1);  
+            yTick = int(f);
+            // To right-justify the Y labels, we have tedious work.
+            // Nudge one character to the right if you don't have a - sign
+            if (yTick < 0) 
+                cursorNudge = 0;
+            else
+                cursorNudge = 5;
+            // Now add to that if the numeric value is < 3 characters long 
+            if( abs(yTick) < 10){
+                cursorNudge += 5 * 2;
+            }else if (abs(yTick) < 100){
+                cursorNudge += 5 * 1;
+            }else{
+                cursorNudge += 0;
+            }
             d.setTextColor(tcolor, bcolor);
-            d.setCursor(gx - 30, temp);
+            d.setCursor(gx - 25 + cursorNudge, temp-4);
             // precision is default Arduino--this could really use some format control
             d.println(int(f));
         }
@@ -116,7 +133,7 @@ void Graph(Adafruit_ILI9341 &d, float x, float y, float gx, float gy, float w, f
         d.setTextSize(1);
         d.setTextColor(acolor, bcolor);
         d.setRotation(2);
-        d.setCursor(tftY / 2 - 10, yLabelMargin - 10);
+        d.setCursor(tftY / 2 - 12, 2);
 
         d.println(ylabel);
         d.setRotation(3);
@@ -141,7 +158,20 @@ void Graph(Adafruit_ILI9341 &d, float x, float y, float gx, float gy, float w, f
             }
             d.setTextSize(1);
             d.setTextColor(tcolor, bcolor);
-            d.setCursor(temp - 6, gy + 3);
+            // To center the X labels on the tick marks, we have tedious work.
+            // Nudge one character to the left if you have have a - sign
+            if (yTick < 0) 
+                cursorNudge = 5;
+            else
+                cursorNudge = 0;
+            // Now add to that if the numeric value is > 3 characters long 
+            if( abs(yTick) < 10){
+                cursorNudge += 0;
+            }else if (abs(yTick) < 100){
+                cursorNudge += 5 * 1;
+            }else{
+                cursorNudge += 5 * 1.5;
+            }d.setCursor(temp - cursorNudge, gy + 3);
             // precision is default Arduino--this could really use some format control
             if ((f != xlo) && (f != xhi))
             {
