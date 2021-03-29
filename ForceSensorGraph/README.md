@@ -9,7 +9,7 @@ Requires load cell board, hx711 load cell, and serial SPI ILI9341 screen.  If yo
 - Read the comments at the top of the source and include files.  Edit as necessary for your system/hardware
 - Build/Upload
 
-Wiring:
+## Wiring:
 
 | Board | TFT |
 | ------- | ----- |
@@ -19,7 +19,9 @@ Wiring:
 | SCK | SCK |
 | SCL | CS |
 | SDA | D/C |
-| VCC | VCC | (also jump this to LED)
+| VCC | VCC |
 | GND | GND |
+
+Also jump VCC over to the LED pin on the TFT.
 
 ![TFT Load Cell Graphing](test/Breadboard.jpeg)
