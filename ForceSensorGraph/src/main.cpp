@@ -114,7 +114,7 @@ void loop(void)
     // TODO: Fix that.
     if (millis() > (((t + t_offset) * 1000) + dataInterval))
     {
-      // Pack the float into a 16-bit int with 2 places after the decimal ( * 100)
+      // Pack the float into a 16-bit int with 1 place after the decimal ( * 10)
       iForce = round(10*(hx711A.getData() - 8528800) / 50); // Kludgy tare + normalization for now
       fForce = iForce/10;  // Make the float version (2 sigfigs after the decimal)
       t = ((float)millis()) / 1000 - t_offset;   // Repeating elapsed time in seconds
