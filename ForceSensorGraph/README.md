@@ -9,4 +9,19 @@ Requires load cell board, hx711 load cell, and serial SPI ILI9341 screen.  If yo
 - Read the comments at the top of the source and include files.  Edit as necessary for your system/hardware
 - Build/Upload
 
+## Wiring the TFT to the load cell board:
+
+| Board (wire in photo) | TFT |
+| ------- | ----- |
+| MOSI (Orange)  | MOSI |
+| MISO (Purple)  | MISO |
+| RST (Blue) | Reset |
+| SCK (Brown) | SCK |
+| SCL (Green) | CS |
+| SDA (Yellow) | D/C |
+| VCC (Red) | VCC |
+| GND (Black) | GND |
+
+Also jump VCC over to the LED pin on the TFT. If your MCU is 5V, and your screen only accepts 3.3V logic, you also need at least 5 channels of logic conversion for MOSI, MISO, SCK, SCL(CS), and SDA(D/C).
+
 ![TFT Load Cell Graphing](test/Breadboard.jpeg)
