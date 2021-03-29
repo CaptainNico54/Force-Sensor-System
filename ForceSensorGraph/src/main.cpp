@@ -23,12 +23,19 @@ https://github.com/KrisKasprzak/GraphingFunction/blob/master/Graph.ino
 #include "pins.h"   // Customize TFT and hx711 pins in here
 
 // Initialize some global variables
+const int dataInterval = 250; // How often (ms) to sample and plot data
 const int calVal_eepromAdress = 0;
-float force;
-float t, t_offset = 0; // old and current times for x-axis
+short iForce, qForce;  // This will be force multiplied by 100 (to save 2x on RAM)
+float fForce, t, t_offset = 0; // old and current times for x-axis
+
+// Declare a Queue to store our data.
+// How many points do we keep?
+int forceQueueLen = round((xLabelHi - xLabelLo) * (1000.0 / dataInterval));
+//unsigned short forceQueueLen = round((float)1000 / (float)dataInterval);
+cppQueue forceQueueA(sizeof(short), forceQueueLen, FIFO);
 
 // HX711 constructor:
-HX711_ADC hx711a(HX711_A_DOUT, HX711_A_SCK);
+HX711_ADC hx711A(HX711_A_DOUT, HX711_A_SCK);
 //HX711_ADC hx711b(HX711_B_DOUT, HX711_B_SCK);
 
 // ILI9341 constructor:
@@ -37,17 +44,20 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 
 void setup()
 {
+  delay(1000);
   Serial.begin(9600);
   Serial.println();
   Serial.println("Starting...");
+  Serial.println("Queue length is ");
+  Serial.println(forceQueueLen);
 
   // Initialize the force sensor
-  hx711a.begin();
+  hx711A.begin();
   // Precision right after power-up can be improved by adding a few seconds of stabilizing time
   boolean _tare = false; //set this to true if you want tare to be performed in the next step
   unsigned long stabilizingtime = 2000;
-  hx711a.start(stabilizingtime, _tare);
-  if (hx711a.getTareTimeoutFlag() || hx711a.getSignalTimeoutFlag())
+  hx711A.start(stabilizingtime, _tare);
+  if (hx711A.getTareTimeoutFlag() || hx711A.getSignalTimeoutFlag())
   {
     Serial.println("Timeout on load cell A. Check MCU>HX711 wiring and pin designations.");
     while (1)
@@ -55,10 +65,10 @@ void setup()
   }
   else
   {
-    hx711a.setCalFactor(1.0); // user set calibration value (float)
+    hx711A.setCalFactor(1.0); // user set calibration value (float)
     Serial.println("Startup for load cell A is complete");
   }
-  //while (!hx711a.update());
+  //while (!hx711A.update());
   //calibrate(); //start calibration procedure
 
   // Initialize the screen
@@ -81,16 +91,15 @@ void loop(void)
   // Read data and throw it at the screen forever
 
   static boolean newDataReady = 0;
-  const int dataInterval = 250; // Sensor/graph update interval (ms)
 
   // Check for new data/start next conversion:
-  if (hx711a.update())
+  if (hx711A.update())
     newDataReady = true;
 
   // Start over from X = 0 when time falls off the right side of the graph:
   if (t > xLabelHi)
   {
-    t_offset += t; // Remember how many minutes have elapsed so far
+    t_offset += t; // Remember how many seconds have elapsed so far
     t = 0;         // Reset the timer
     Serial.println("Starting graph over!");
     tft.fillScreen(BLACK); // Clear the screen and redraw axes/labels
@@ -105,16 +114,29 @@ void loop(void)
     // TODO: Fix that.
     if (millis() > (((t + t_offset) * 1000) + dataInterval))
     {
-      force = (hx711a.getData() - 8528800) / 50; // Kludgy tare + normalization for now
-      t = ((float)millis()) / 1000 - t_offset;  // Repeating elapsed time in minutes
+      // Pack the float into a 16-bit int with 2 places after the decimal ( * 100)
+      iForce = round(10*(hx711A.getData() - 8528800) / 50); // Kludgy tare + normalization for now
+      fForce = iForce/10;  // Make the float version (2 sigfigs after the decimal)
+      t = ((float)millis()) / 1000 - t_offset;   // Repeating elapsed time in seconds
+      // Store this value in the queue, making room first if needed
+      if (forceQueueA.isFull())
+      {
+        forceQueueA.drop();
+      }
+      forceQueueA.push(&iForce);
       Serial.print("Load cell output: ");
       Serial.print(t);
       Serial.print(", ");
-      Serial.println(force);
+      forceQueueA.peekPrevious(&qForce); // Peek at the record we just put on the Queue
+      Serial.print((float)qForce/10);
+      Serial.print(", ");
+      forceQueueA.peek(&qForce); // Peek at the the record we can peek at (depends on LIFO/FIFO?)
+      Serial.println((float)qForce/10);
       newDataReady = 0;
 
+
       // Draw a line on the TFT between the last (t, force) point and the current one.
-      Graph(tft, t, force, graphX, graphY, graphW, graphH, xLabelLo, xLabelHi, xIncr,
+      Graph(tft, t, fForce, graphX, graphY, graphW, graphH, xLabelLo, xLabelHi, xIncr,
             yLabelLo, yLabelHi, yIncr, title, xTitle, yTitle,
             DKBLUE, RED, YELLOW, WHITE, BLACK, xLabelsDraw, yLabelsDraw);
     }
