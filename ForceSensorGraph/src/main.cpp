@@ -16,6 +16,7 @@ https://github.com/KrisKasprzak/GraphingFunction/blob/master/Graph.ino
 #include <SPI.h>
 #include <Adafruit_ILI9341.h>
 #include <HX711_ADC.h>
+#include <cppQueue.h>
 // #include <EEPROM.h>
 #include "colors.h" // Custom colors are here
 #include "graph.h"  // Customize graph parameters here
@@ -90,7 +91,7 @@ void loop(void)
   if (t > xLabelHi)
   {
     t_offset += t; // Remember how many minutes have elapsed so far
-    t = 0;         // Reset the minute timer
+    t = 0;         // Reset the timer
     Serial.println("Starting graph over!");
     tft.fillScreen(BLACK); // Clear the screen and redraw axes/labels
     xLabelsDraw = true;
@@ -102,10 +103,10 @@ void loop(void)
   {
     // All of the time-based logic will blow up when millis() overflows (~49 days).
     // TODO: Fix that.
-    if (millis() > (((t + t_offset) * 60000) + dataInterval))
+    if (millis() > (((t + t_offset) * 1000) + dataInterval))
     {
       force = (hx711a.getData() - 8528800) / 50; // Kludgy tare + normalization for now
-      t = ((float)millis()) / 60000 - t_offset;  // Repeating elapsed time in minutes
+      t = ((float)millis()) / 1000 - t_offset;  // Repeating elapsed time in minutes
       Serial.print("Load cell output: ");
       Serial.print(t);
       Serial.print(", ");

@@ -22,22 +22,22 @@ float graphW; // Graph height
 float graphH; // Graph height
 
 // Declare/set/pre-compute some graph parameters:
-float titleMargin = 20.;     // Title space height in pixels
-boolean yLabelsDraw = true;  // Draw the Y labels or not?
-float yLabelMargin = 30.;    // Y label space in pixels
-float yLabelLo = -100.;      // Lower Y label (axis units)
-float yLabelHi = 100.;       // Upper Y label (axis units)
-float yIncr = 25;            // Y label increment (axis units)
-boolean xLabelsDraw = true;  // Draw the X labels or not?
-float xLabelMargin = 25.;    // X label space in pixels
-float xLabelLo = 0.;         // Lower X label (axis units)
-float xLabelHi = 5.;         // Upper X label (axis units)
-float xIncr = 1.;            // X label increment (axis units)
-float rightMargin = 5.;      // Space to right of graph in pixels
+float titleMargin = 20.;    // Title space height in pixels
+boolean yLabelsDraw = true; // Draw the Y labels or not?
+float yLabelMargin = 30.;   // Y label space in pixels
+float yLabelLo = -100.;     // Lower Y label (axis units)
+float yLabelHi = 100.;      // Upper Y label (axis units)
+float yIncr = 25;           // Y label increment (axis units)
+boolean xLabelsDraw = true; // Draw the X labels or not?
+float xLabelMargin = 25.;   // X label space in pixels
+float xLabelLo = 0.;        // Lower X label (axis units)
+float xLabelHi = 120.;      // Upper X label (axis units)
+float xIncr = 20.;          // X label increment (axis units)
+float rightMargin = 5.;    // Space to right of graph in pixels
 
 String title = "Load Cell A";
 String yTitle = "Force";
-String xTitle = "Time (m)";
+String xTitle = "Time (s)";
 
 // Forward declaration for Graph(), if you need it:
 // void Graph(Adafruit_ILI9341 &d, float x, float y, float gx, float gy, float w, float h,
@@ -72,7 +72,8 @@ String xTitle = "Time (m)";
   pcolor = color of your plotted data
   tcolor = text color
   bcolor = background color
-  &redraw = flag to redraw graph on fist call only
+  &xLabelsDraw = flag to redraw Y-axis/labels (resets to false after one call with true)
+  &yLabelsDraw = flag to redraw Y-axis/labels (resets to false after one call with true)
 */
 
 void Graph(Adafruit_ILI9341 &d, float x, float y, float gx, float gy, float w, float h,
@@ -140,9 +141,12 @@ void Graph(Adafruit_ILI9341 &d, float x, float y, float gx, float gy, float w, f
             }
             d.setTextSize(1);
             d.setTextColor(tcolor, bcolor);
-            d.setCursor(temp - 2, gy + 3);
+            d.setCursor(temp - 6, gy + 3);
             // precision is default Arduino--this could really use some format control
-            d.println(int(f));
+            if ((f != xlo) && (f != xhi))
+            {
+                d.println(int(f));
+            }
         }
         d.setTextSize(1);
         d.setTextColor(acolor, bcolor);
