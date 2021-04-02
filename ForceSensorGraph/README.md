@@ -1,5 +1,5 @@
 ## PlatformIO project for live graphing of load sensor data to an ILI9341 (or other) TFT
-Requires load cell board, hx711 load cell, and serial SPI ILI9341 screen.  If your screen can only take 3.3V logic, then you also need at least 5 channels of logic conversion.
+Requires hx711 load cell board, compatible load cell (this one is 20kg), and serial SPI ILI9341 screen.  If your screen can only take 3.3V logic, then you also need at least 5 channels of logic conversion.
 
 - Install and run VSCode
 - Install the PlatformIO extension from the VSCode extensions pane
