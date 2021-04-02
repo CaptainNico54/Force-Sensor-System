@@ -13,3 +13,6 @@ const int HX711_A_SCK = A0;
 // LoadCell B:
 const int HX711_B_DOUT = A2; // Is this right?
 const int HX711_B_SCK = A3;  // Is this right?
+
+// Tare Button (pin 13 for V0.2)
+const int TARE_PIN = 13;

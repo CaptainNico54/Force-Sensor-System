@@ -15,7 +15,8 @@ https://github.com/KrisKasprzak/GraphingFunction/blob/master/Graph.ino
 #include <Arduino.h>
 #include <SPI.h>
 #include <Adafruit_ILI9341.h>
-#include <HX711_ADC.h>
+#include <HX711.h>
+#include <OneButton.h>
 #include <cppQueue.h>
 // #include <EEPROM.h>
 #include "colors.h" // Custom colors are here
@@ -25,51 +26,56 @@ https://github.com/KrisKasprzak/GraphingFunction/blob/master/Graph.ino
 // Initialize some global variables
 const int dataInterval = 250; // How often (ms) to sample and plot data
 const int calVal_eepromAdress = 0;
-short iForce, qForce;  // This will be force multiplied by 100 (to save 2x on RAM)
+short iForce, qForce;          // This will be force multiplied by 100 (to save 2x on RAM)
 float fForce, t, t_offset = 0; // old and current times for x-axis
 
-// Declare a Queue to store our data.
-// How many points do we keep?
+// Declare a Queue to store our data after counting the number of points we need to cache
 int forceQueueLen = round((xLabelHi - xLabelLo) * (1000.0 / dataInterval));
-//unsigned short forceQueueLen = round((float)1000 / (float)dataInterval);
 cppQueue forceQueueA(sizeof(short), forceQueueLen, FIFO);
 
-// HX711 constructor:
-HX711_ADC hx711A(HX711_A_DOUT, HX711_A_SCK);
-//HX711_ADC hx711b(HX711_B_DOUT, HX711_B_SCK);
-
-// ILI9341 constructor:
-// Use hardware SPI (on Uno/Leonardo, pins #13, #12, #11) and the #defines in pins.h for CS/DC/RST
+// ILI9341 constructor: Use hardware SPI for the TFT.
+// On Uno/Leonardo, pins #13, #12, #11 and the #defines in pins.h for CS/DC/RST
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
+
+OneButton tareButton(TARE_PIN, false); // OneButton constructor
+HX711 hx711A;         // HX711 constructor
+
+void tareHandler()
+{
+  Serial.print("Taring...");
+  delay(500); // Let things settle for 500ms before reading.
+  hx711A.tare(20);  // Take the tare reading with 20 sample (10 is default)
+  Serial.println("...Done.");
+}
+
+void calibrateHandler()
+{
+  hx711A.set_scale();
+  hx711A.tare();
+}
 
 void setup()
 {
-  delay(1000);
   Serial.begin(9600);
+  // Wait until a serial monitor comes online
+  while (!Serial)
+    ;
   Serial.println();
   Serial.println("Starting...");
-  Serial.println("Queue length is ");
+  Serial.println("Data queue length is ");
   Serial.println(forceQueueLen);
 
   // Initialize the force sensor
-  hx711A.begin();
-  // Precision right after power-up can be improved by adding a few seconds of stabilizing time
-  boolean _tare = false; //set this to true if you want tare to be performed in the next step
-  unsigned long stabilizingtime = 2000;
-  hx711A.start(stabilizingtime, _tare);
-  if (hx711A.getTareTimeoutFlag() || hx711A.getSignalTimeoutFlag())
-  {
-    Serial.println("Timeout on load cell A. Check MCU>HX711 wiring and pin designations.");
-    while (1)
-      ;
-  }
-  else
-  {
-    hx711A.setCalFactor(1.0); // user set calibration value (float)
-    Serial.println("Startup for load cell A is complete");
-  }
-  //while (!hx711A.update());
-  //calibrate(); //start calibration procedure
+  hx711A.begin(HX711_A_DOUT, HX711_A_SCK);
+  hx711A.tare(20);  // Tare with 20 readings (default is 10)
+  Serial.println("Finished initializing load cell.");
+
+  // Tare button setup: second parameter is false because we have a pullup on this button
+  pinMode(TARE_PIN, INPUT_PULLUP);
+  tareButton.attachClick(tareHandler);
+  tareButton.attachLongPressStart(calibrateHandler);
+
+  
 
   // Initialize the screen
   tft.begin();
@@ -86,15 +92,11 @@ void setup()
   tft.fillScreen(BLACK);
 }
 
+// Read data and throw it at the screen forever
 void loop(void)
 {
-  // Read data and throw it at the screen forever
-
-  static boolean newDataReady = 0;
-
-  // Check for new data/start next conversion:
-  if (hx711A.update())
-    newDataReady = true;
+  // Check the tare button
+  tareButton.tick();
 
   // Start over from X = 0 when time falls off the right side of the graph:
   if (t > xLabelHi)
@@ -108,16 +110,16 @@ void loop(void)
   }
 
   // Get smoothed value from the dataset:
-  if (newDataReady)
+  if (hx711A.is_ready())
   {
     // All of the time-based logic will blow up when millis() overflows (~49 days).
     // TODO: Fix that.
     if (millis() > (((t + t_offset) * 1000) + dataInterval))
     {
       // Pack the float into a 16-bit int with 1 place after the decimal ( * 10)
-      iForce = round(10*(hx711A.getData() - 8528800) / 50); // Kludgy tare + normalization for now
-      fForce = iForce/10;  // Make the float version (2 sigfigs after the decimal)
-      t = ((float)millis()) / 1000 - t_offset;   // Repeating elapsed time in seconds
+      iForce = round(hx711A.get_units());
+      fForce = iForce / 10;                                // Make the float version (1 place after the decimal)
+      t = ((float)millis()) / 1000 - t_offset;             // Repeating elapsed time in seconds
       // Store this value in the queue, making room first if needed
       if (forceQueueA.isFull())
       {
@@ -128,12 +130,10 @@ void loop(void)
       Serial.print(t);
       Serial.print(", ");
       forceQueueA.peekPrevious(&qForce); // Peek at the record we just put on the Queue
-      Serial.print((float)qForce/10);
+      Serial.print((float)qForce / 10);
       Serial.print(", ");
       forceQueueA.peek(&qForce); // Peek at the the record we can peek at (depends on LIFO/FIFO?)
-      Serial.println((float)qForce/10);
-      newDataReady = 0;
-
+      Serial.println((float)qForce / 10);
 
       // Draw a line on the TFT between the last (t, force) point and the current one.
       Graph(tft, t, fForce, graphX, graphY, graphW, graphH, xLabelLo, xLabelHi, xIncr,
