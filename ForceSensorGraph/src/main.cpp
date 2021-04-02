@@ -44,7 +44,7 @@ void tareHandler()
 {
   Serial.print("Taring...");
   delay(500);      // Let things settle for 500ms before reading.
-  hx711A.tare(20); // Take the tare reading with 20 sample (10 is default)
+  hx711A.tare(); // Take the tare reading (10 samples is default)
   Serial.println("...Done.");
 }
 
@@ -92,7 +92,9 @@ void setup()
   Serial.println(msg);
   tft.fillScreen(BLACK); // This makes NOISE and screws up the next HX711 reading
   delay(350); // Wait for the noise to decay away.
-
+  
+  // This is T=0, set x-axis offset to now (in seconds)
+  t_offset = millis()/1000;
 }
 
 // Read data and throw it at the screen forever
