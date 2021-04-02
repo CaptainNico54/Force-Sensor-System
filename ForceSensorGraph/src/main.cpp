@@ -38,19 +38,20 @@ cppQueue forceQueueA(sizeof(short), forceQueueLen, FIFO);
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 
 OneButton tareButton(TARE_PIN, false); // OneButton constructor
-HX711 hx711A;         // HX711 constructor
+HX711 hx711A;                          // HX711 constructor
 
 void tareHandler()
 {
   Serial.print("Taring...");
-  delay(500); // Let things settle for 500ms before reading.
-  hx711A.tare(20);  // Take the tare reading with 20 sample (10 is default)
+  delay(500);      // Let things settle for 500ms before reading.
+  hx711A.tare(20); // Take the tare reading with 20 sample (10 is default)
   Serial.println("...Done.");
 }
 
 void calibrateHandler()
 {
-  hx711A.set_scale();
+  Serial.print("Calibration routine to go here...");
+  hx711A.set_scale(2);
   hx711A.tare();
 }
 
@@ -67,15 +68,15 @@ void setup()
 
   // Initialize the force sensor
   hx711A.begin(HX711_A_DOUT, HX711_A_SCK);
-  hx711A.tare(20);  // Tare with 20 readings (default is 10)
+  hx711A.tare(20); // Tare with 20 readings (default is 10)
+  hx711A.set_scale(3);
+
   Serial.println("Finished initializing load cell.");
 
   // Tare button setup: second parameter is false because we have a pullup on this button
   pinMode(TARE_PIN, INPUT_PULLUP);
   tareButton.attachClick(tareHandler);
   tareButton.attachLongPressStart(calibrateHandler);
-
-  
 
   // Initialize the screen
   tft.begin();
@@ -89,7 +90,9 @@ void setup()
   tft.setRotation(3);
   sprintf(msg, "Initialized %dx%d TFT screen.", tft.width(), tft.height());
   Serial.println(msg);
-  tft.fillScreen(BLACK);
+  tft.fillScreen(BLACK); // This makes NOISE and screws up the next HX711 reading
+  delay(350); // Wait for the noise to decay away.
+
 }
 
 // Read data and throw it at the screen forever
@@ -104,7 +107,8 @@ void loop(void)
     t_offset += t; // Remember how many seconds have elapsed so far
     t = 0;         // Reset the timer
     Serial.println("Starting graph over!");
-    tft.fillScreen(BLACK); // Clear the screen and redraw axes/labels
+    tft.fillScreen(BLACK); // Clear the screen and redraw axes/labels - generates NOISE that hampers the next HX11 reading
+    delay(300); // Let the noise decay away.
     xLabelsDraw = true;
     yLabelsDraw = true;
   }
@@ -118,8 +122,8 @@ void loop(void)
     {
       // Pack the float into a 16-bit int with 1 place after the decimal ( * 10)
       iForce = round(hx711A.get_units());
-      fForce = iForce / 10;                                // Make the float version (1 place after the decimal)
-      t = ((float)millis()) / 1000 - t_offset;             // Repeating elapsed time in seconds
+      fForce = iForce / 10;                    // Make the float version (1 place after the decimal)
+      t = ((float)millis()) / 1000 - t_offset; // Repeating elapsed time in seconds
       // Store this value in the queue, making room first if needed
       if (forceQueueA.isFull())
       {
@@ -134,6 +138,7 @@ void loop(void)
       Serial.print(", ");
       forceQueueA.peek(&qForce); // Peek at the the record we can peek at (depends on LIFO/FIFO?)
       Serial.println((float)qForce / 10);
+      
 
       // Draw a line on the TFT between the last (t, force) point and the current one.
       Graph(tft, t, fForce, graphX, graphY, graphW, graphH, xLabelLo, xLabelHi, xIncr,

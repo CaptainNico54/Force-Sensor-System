@@ -82,19 +82,21 @@ void Graph(Adafruit_ILI9341 &d, float x, float y, float gx, float gy, float w, f
            String xlabel, String ylabel, unsigned int gcolor, unsigned int acolor, unsigned int pcolor,
            unsigned int tcolor, unsigned int bcolor, boolean &xLabelsDraw, boolean &yLabelsDraw)
 {
-    float f;
+    float myf;
     float temp;
+    int noiseDecayTime = 0;
 
     if (yLabelsDraw)
     {
         yLabelsDraw = false; // Just draw the axis/labels one time
+        noiseDecayTime = 300;
         oy = (y - ylo) * (gy - h - gy) / (yhi - ylo) + gy;
         // draw y scale
-        for (f = ylo; f <= yhi; f += yinc)
+        for (myf = ylo; myf <= yhi; myf += yinc)
         {
             // compute the transform
-            temp = (f - ylo) * (gy - h - gy) / (yhi - ylo) + gy;
-            if (f == 0)
+            temp = (myf - ylo) * (gy - h - gy) / (yhi - ylo) + gy;
+            if (myf == 0)
             {
                 d.drawLine(gx, temp, gx + w, temp, acolor);
             }
@@ -104,7 +106,7 @@ void Graph(Adafruit_ILI9341 &d, float x, float y, float gx, float gy, float w, f
             }
             // Size = 1 characters are 5x8 px
             d.setTextSize(1);  
-            yTick = int(f);
+            yTick = int(myf);
             // To right-justify the Y labels, we have tedious work.
             // Nudge one character to the right if you don't have a - sign
             if (yTick < 0) 
@@ -122,7 +124,7 @@ void Graph(Adafruit_ILI9341 &d, float x, float y, float gx, float gy, float w, f
             d.setTextColor(tcolor, bcolor);
             d.setCursor(gx - 25 + cursorNudge, temp-4);
             // precision is default Arduino--this could really use some format control
-            d.println(int(f));
+            d.println(int(myf));
         }
         // Draw the Title
         d.setTextSize(2);
@@ -143,12 +145,13 @@ void Graph(Adafruit_ILI9341 &d, float x, float y, float gx, float gy, float w, f
     {
         ox = (x - xlo) * (w) / (xhi - xlo) + gx;
         xLabelsDraw = false; // Just draw that axis/labels one time
+        noiseDecayTime = 300;
         // draw x scale
-        for (f = xlo; f <= xhi; f += xinc)
+        for (myf = xlo; myf <= xhi; myf += xinc)
         {
             // compute the transform
-            temp = (f - xlo) * (w) / (xhi - xlo) + gx;
-            if (f == 0)
+            temp = (myf - xlo) * (w) / (xhi - xlo) + gx;
+            if (myf == 0)
             {
                 d.drawLine(temp, gy, temp, gy - h, acolor);
             }
@@ -173,9 +176,9 @@ void Graph(Adafruit_ILI9341 &d, float x, float y, float gx, float gy, float w, f
                 cursorNudge += 5 * 1.5;
             }d.setCursor(temp - cursorNudge, gy + 3);
             // precision is default Arduino--this could really use some format control
-            if ((f != xlo) && (f != xhi))
+            if ((myf != xlo) && (myf != xhi))
             {
-                d.println(int(f));
+                d.println(int(myf));
             }
         }
         d.setTextSize(1);
@@ -193,4 +196,5 @@ void Graph(Adafruit_ILI9341 &d, float x, float y, float gx, float gy, float w, f
     d.drawLine(ox, oy - 1, x, y - 1, pcolor);
     ox = x;
     oy = y;
+    delay(noiseDecayTime);  // Let noise decay away.
 } // End of graphing function
