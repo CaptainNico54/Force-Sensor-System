@@ -14,45 +14,50 @@ https://github.com/KrisKasprzak/GraphingFunction/blob/master/Graph.ino
 
 #include <Arduino.h>
 #include <SPI.h>
-#include <Adafruit_ILI9341.h>
+#include <TFT_ILI9341.h>
+#include <TFT_Charts.h>
 #include <HX711.h>
 #include <OneButton.h>
 #include <cppQueue.h>
+#include "pins.h" // Customize TFT and hx711 pins in here
 // #include <EEPROM.h>
-#include "colors.h" // Custom colors are here
-#include "graph.h"  // Customize graph parameters here
-#include "pins.h"   // Customize TFT and hx711 pins in here
 
 // Initialize some global variables
-const int dataInterval = 250; // How often (ms) to sample and plot data
-const int calVal_eepromAdress = 0;
-short iForce, qForce;          // This will be force multiplied by 100 (to save 2x on RAM)
-float fForce, t, t_offset = 0; // old and current times for x-axis
+const int dataInterval = 250;      // How often (ms) to sample and plot data
+const int fQLen = 100;             // How many points to keep on the FIFO queue?
+const int calVal_eepromAdress = 0; // What EEPROM address should store the calibration
+float t_offset = 0;                // Offset for t=0 on X.
+float xPrev = 0;                   // Previous value for X
+float yPrev = 0;                   // Previous value for Y
+struct point                       // Points struct to put in the queue
+{
+  float x, y;
+};
 
-// Declare a Queue to store our data after counting the number of points we need to cache
-int forceQueueLen = round((xLabelHi - xLabelLo) * (1000.0 / dataInterval));
-cppQueue forceQueueA(sizeof(short), forceQueueLen, FIFO);
+// Instantiate a cppQueue to store fQLen number of points
+cppQueue fQ(sizeof(point), fQLen, FIFO);
 
 // ILI9341 constructor: Use hardware SPI for the TFT.
-// On Uno/Leonardo, pins #13, #12, #11 and the #defines in pins.h for CS/DC/RST
-Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
+// On Uno/Leonardo, pins #13, #12, #11 and the #defines in TFT_ILI9341/User_Setup.h
+TFT_ILI9341 tft = TFT_ILI9341(TFT_CS, TFT_DC);
 
-OneButton tareButton(TARE_PIN, false); // OneButton constructor
-HX711 hx711A;                          // HX711 constructor
+OneButton tareButton(TARE_PIN, false); // OneButton constructor | false -> pullup
+HX711 hx711;                           // HX711 constructor
+ChartXY xyChart;                       // ChartXY constructor
 
 void tareHandler()
 {
   Serial.print("Taring...");
-  delay(500);      // Let things settle for 500ms before reading.
-  hx711A.tare(); // Take the tare reading (10 samples is default)
+  delay(500);   // Let things settle for 500ms before reading.
+  hx711.tare(); // Take the tare reading (10 samples is default)
   Serial.println("...Done.");
 }
 
 void calibrateHandler()
 {
   Serial.print("Calibration routine to go here...");
-  hx711A.set_scale(2);
-  hx711A.tare();
+  hx711.set_scale(2);
+  hx711.tare();
 }
 
 void setup()
@@ -63,89 +68,106 @@ void setup()
     ;
   Serial.println();
   Serial.println("Starting...");
-  Serial.println("Data queue length is ");
-  Serial.println(forceQueueLen);
+  Serial.print("Queue size is ");
+  Serial.print(fQLen);
+  Serial.println(" points.");
 
   // Initialize the force sensor
-  hx711A.begin(HX711_A_DOUT, HX711_A_SCK);
-  hx711A.tare(20); // Tare with 20 readings (default is 10)
-  hx711A.set_scale(3);
+  hx711.begin(HX711_A_DOUT, HX711_A_SCK);
+  hx711.tare(20);      // Tare with 20 readings (default is 10)
+  hx711.set_scale(30); // This should eventually come out of EEPROM
 
   Serial.println("Finished initializing load cell.");
 
-  // Tare button setup: second parameter is false because we have a pullup on this button
+  // Tare button setup:
   pinMode(TARE_PIN, INPUT_PULLUP);
   tareButton.attachClick(tareHandler);
   tareButton.attachLongPressStart(calibrateHandler);
 
+  // Seed the queue with the first point of the first line (origin)
+  point p;
+  p.x = 0.;
+  p.y = 0.;
+  fQ.push(&p);
+
   // Initialize the screen
   tft.begin();
-  tftX = tft.height();                        // The X direction is the hardware's height
-  tftY = tft.width();                         // The Y direction is the hardware's width
-  graphX = yLabelMargin;                      // Graph location (lower left)
-  graphY = tftY - xLabelMargin;               // Graph location (lower left)
-  graphW = tftX - yLabelMargin - rightMargin; // Graph width (X)
-  graphH = tftY - xLabelMargin - titleMargin; // Graph height (Y)
-  char msg[50];
-  tft.setRotation(3);
-  sprintf(msg, "Initialized %dx%d TFT screen.", tft.width(), tft.height());
-  Serial.println(msg);
-  tft.fillScreen(BLACK); // This makes NOISE and screws up the next HX711 reading
-  delay(350); // Wait for the noise to decay away.
-  
-  // This is T=0, set x-axis offset to now (in seconds)
-  t_offset = millis()/1000;
+  xyChart.begin(tft);
+  tft.fillScreen(BLACK);
+  xyChart.tftInfo();
+  xyChart.setAxisLimitsX(0, 30, 6);
+  xyChart.setAxisLimitsY(-100, 100, 25);
+  xyChart.drawTitle(tft, "Load Cell A");
+  xyChart.drawAxisX(tft, 10);
+  xyChart.drawAxisY(tft, 10);
+  xyChart.drawLabelsX(tft);
+  xyChart.drawLabelsY(tft);
+  delay(300); // Let noise settle
+
+  // We are now at t=0. Set x-axis offset to now (in seconds)
+  t_offset = millis() / 1000;
 }
 
 // Read data and throw it at the screen forever
 void loop(void)
 {
-  // Check the tare button
-  tareButton.tick();
+  int i;        // Loop indices
+  point p, p0, p1; // Temporary points to hold queue values
+  float dx;        // Delta-X, for interleaved line scrolling on X axis
 
-  // Start over from X = 0 when time falls off the right side of the graph:
-  if (t > xLabelHi)
-  {
-    t_offset += t; // Remember how many seconds have elapsed so far
-    t = 0;         // Reset the timer
-    Serial.println("Starting graph over!");
-    tft.fillScreen(BLACK); // Clear the screen and redraw axes/labels - generates NOISE that hampers the next HX11 reading
-    delay(300); // Let the noise decay away.
-    xLabelsDraw = true;
-    yLabelsDraw = true;
-  }
+  tareButton.tick(); // Check the tare button
 
   // Get smoothed value from the dataset:
-  if (hx711A.is_ready())
+  if (hx711.is_ready())
   {
     // All of the time-based logic will blow up when millis() overflows (~49 days).
-    // TODO: Fix that.
-    if (millis() > (((t + t_offset) * 1000) + dataInterval))
+    if (millis() > (((p.x + t_offset) * 1000) + dataInterval))
     {
-      // Pack the float into a 16-bit int with 1 place after the decimal ( * 10)
-      iForce = round(hx711A.get_units());
-      fForce = iForce / 10;                    // Make the float version (1 place after the decimal)
-      t = ((float)millis()) / 1000 - t_offset; // Repeating elapsed time in seconds
-      // Store this value in the queue, making room first if needed
-      if (forceQueueA.isFull())
-      {
-        forceQueueA.drop();
-      }
-      forceQueueA.push(&iForce);
-      Serial.print("Load cell output: ");
-      Serial.print(t);
-      Serial.print(", ");
-      forceQueueA.peekPrevious(&qForce); // Peek at the record we just put on the Queue
-      Serial.print((float)qForce / 10);
-      Serial.print(", ");
-      forceQueueA.peek(&qForce); // Peek at the the record we can peek at (depends on LIFO/FIFO?)
-      Serial.println((float)qForce / 10);
-      
+      p.y = hx711.get_units();                   // Read the load cell value as a float (4 bytes on 8-bit AVRs)
+      p.x = (float(millis()) / 1000 - t_offset); // Elapsed time in seconds.  (Why must I cast millis() here?)
 
-      // Draw a line on the TFT between the last (t, force) point and the current one.
-      Graph(tft, t, fForce, graphX, graphY, graphW, graphH, xLabelLo, xLabelHi, xIncr,
-            yLabelLo, yLabelHi, yIncr, title, xTitle, yTitle,
-            DKBLUE, RED, YELLOW, WHITE, BLACK, xLabelsDraw, yLabelsDraw);
+      // Report the current [time, force] value
+      Serial.print(p.x);
+      Serial.print(", ");
+      Serial.println(p.y);
+
+      // Check if the queue is full
+      if (fQ.isFull())
+      {
+        xyChart.isScrolling = true;               // Start scrolling the data on X
+        fQ.pop(&p0);                              // Pop the oldest point
+        fQ.push(&p);                              // Update the queue with latest value
+        fQ.peek(&p1);                             // Peek at the new oldest point -> New xMin
+        dx = p1.x - p0.x;                         // We will move the axis right by dx, remember it
+        xyChart.setAxisLimitsX(p1.x, xyChart.xMax + dx, 6); // New X axis limits run from oldest point to 30+dx
+        Serial.print("New xMin is ");
+        Serial.println(p1.x);
+        Serial.print("New xMax is ");
+        Serial.println(xyChart.xMax + dx);
+        // Erase the line between between the popped point and the new oldest point.
+        xyChart.eraseLine(tft, p0.x + dx, p0.y, p1.x + dx, p1.y);
+          // Redraw the axes/labels
+        xyChart.drawAxisX(tft, 10);
+        xyChart.drawLabelsX(tft);
+        xyChart.drawAxisY(tft, 10);
+        // Now move lines one by one (looks SO much better than clearing/drawing, but bookeeping...)
+        for (i = 1; i <= fQLen; i++)
+        {
+          fQ.peekIdx(&p0, i - 1);                        // Peek at tail of line to move
+          fQ.peekIdx(&p1, i);                            // Peek at head of line to move
+          xyChart.drawLine(tft, p0.x, p0.y, p1.x, p1.y); // draw it at the current x-axis limits
+          xyChart.eraseLine(tft, p0.x + dx, p0.y, p1.x + dx, p1.y); // erase it at the old x-axis limits
+          xyChart.eraseLine(tft, p0.x + dx, p0.y, p1.x + dx, p1.y); // erase it at the old x-axis limits
+
+        }
+      }
+      else
+      {
+        fQ.push(&p); // Push the latest value onto the queue
+        xyChart.drawLine(tft, xPrev, yPrev, p.x, p.y);
+        xPrev = p.x;
+        yPrev = p.y;
+      }
     }
   }
 }

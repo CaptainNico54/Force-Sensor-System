@@ -2,9 +2,11 @@
 // SCL will be CS
 // SDA will be DC
 // TFT_RST will piggyback on the MCU reset signal (-1)
-#define TFT_DC SDA
-#define TFT_CS SCL
-#define TFT_RST -1
+// If using TFT_ILI9341, those values must be set in User_Setup.h
+// If using Adafruit_ILI9341 (slow), those values can be set here, just uncomment:
+// #define TFT_DC SDA
+// #define TFT_CS SCL
+// #define TFT_RST -1
 
 // LoadCell pins
 // LoadCell A:
