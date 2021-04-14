@@ -21,7 +21,7 @@ https://github.com/KrisKasprzak/GraphingFunction/blob/master/Graph.ino
 #include "pins.h" // Customize TFT and hx711 pins in here
 // #include <EEPROM.h>
 
-#define DEBUG 1 // Set to 1 to get program status on the Serial monitor
+#define DEBUG 0 // Set to 1 to get program status on the Serial monitor
 
 // Initialize some global variables
 const int dataInterval = 250;      // How often (ms) to sample and plot data
