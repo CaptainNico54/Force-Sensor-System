@@ -7,7 +7,7 @@ Requires hx711 load cell board, compatible load cell (this one is 20kg), and ser
 - File->Open Folder, then navigate to this ForceSensorGraph directory
 - PlatformIO will parse platformio.ini and should install the required frameworks and libraries for you
 - Navigate to the libdeps\<board>\TFT_ILI9341 directory and modify User_Setup.h and comment out all but one font:
-  ```
+```
   #define LOAD_GLCD   // Font 1. Original Adafruit 8 pixel font needs ~1820 bytes in FLASH
 // #define LOAD_FONT2  // Font 2. Small 16 pixel high font, needs ~3534 bytes in FLASH, 96 characters
 // #define LOAD_FONT4  // Font 4. Medium 26 pixel high font, needs ~5848 bytes in FLASH, 96 characters
