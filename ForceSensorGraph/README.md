@@ -6,6 +6,13 @@ Requires hx711 load cell board, compatible load cell (this one is 20kg), and ser
 - Clone the Photonsters/Print-Load-Sensor repository from the Git pane
 - File->Open Folder, then navigate to this ForceSensorGraph directory
 - PlatformIO will parse platformio.ini and should install the required frameworks and libraries for you
+- Navigate to the libdeps\<board>\TFT_ILI9341 directory and modify User_Setup.h:
+  ```
+  #define TFT_CS   SCL  // Chip select control pin
+  #define TFT_DC   SDA  // Data Command control pin
+  #define TFT_RST  -1  // Reset pin (could connect to Arduino RESET pin)
+  ```
+  - Comment out all of the fonts except the first one.
 - Read the comments at the top of the source and include files.  Edit as necessary for your system/hardware
 - Build/Upload
 
