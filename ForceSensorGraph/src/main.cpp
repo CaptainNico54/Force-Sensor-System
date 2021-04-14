@@ -21,15 +21,15 @@ https://github.com/KrisKasprzak/GraphingFunction/blob/master/Graph.ino
 #include "pins.h" // Customize TFT and hx711 pins in here
 // #include <EEPROM.h>
 
-#define DEBUG 0 // Set to 1 to get program status on the Serial monitor
+#define DEBUG 1 // Set to 1 to get program status on the Serial monitor
 
 // Initialize some global variables
-const int dataInterval = 250;            // How often (ms) to sample and plot data
-const int fQLen = 100;                   // How many points to keep on the FIFO queue?
-const int calVal_eepromAdress = 0;       // What EEPROM address should store the calibration
-float t_offset = 0;                      // Offset for t=0 on X.
-float xPrev = 0;                         // Previous value for X
-float yPrev = 0;                         // Previous value for Y
+const int dataInterval = 250;      // How often (ms) to sample and plot data
+const int fQLen = 100;             // How many points to keep on the FIFO queue?
+const int calVal_eepromAdress = 0; // What EEPROM address should store the calibration
+float t_offset = 0;                // Offset for t=0 on X.
+float xPrev = 0;                   // Previous value for X
+float yPrev = 0;                   // Previous value for Y
 float fMean, allTimeSum, allTimeSamples;
 
 // Instantiate a cppQueue to store fQLen number of points
@@ -96,8 +96,15 @@ ChartXY::point getMinMax()
   return (p);
 }
 
-boolean scaleY(float yMin, float yMax)
+boolean scaleY(float yMin, float yMax, String reason)
 {
+
+  if (DEBUG)
+  {
+    Serial.println(reason);
+    Serial.println("Current Y limits: " + String(xyChart.yMin) + ", " + String(xyChart.yMax));
+    Serial.println("Scaling Y to range " + String(yMin) + ", " + String(yMax));
+  }
   tft.fillScreen(xyChart.tftBGColor);
   xyChart.drawTitleChart(tft, "Load Cell A");
   xyChart.setAxisLimitsY(yMin, yMax, (yMax - yMin) / 8);
@@ -108,6 +115,39 @@ boolean scaleY(float yMin, float yMax)
   xyChart.drawLabelsX(tft);
   xyChart.drawY0(tft);
   return (true);
+}
+
+// Scale the Y axis if needed
+boolean autoScale(ChartXY::point mm, ChartXY::point p)
+{
+  float fMin = mm.x;
+  float fMax = mm.y;
+  float shrinkFactor = 7; // Determines the default Y range in relation to the current min/max values when shrinking limits
+  float growFactor = 0.1; // Determines the additional Y range added to the current min/max values when expanding limits
+  boolean scaled = false;
+
+  if (DEBUG)
+  {
+    Serial.println("\nCheck limits: Current Y value is " + String(p.y));
+    Serial.println("fMin = " + String(fMin) + ", fMax = " + String(fMax));
+  }
+
+  if (p.y < xyChart.yMin)
+  {
+    scaled = scaleY(p.y - (growFactor * fabs(p.y)), xyChart.yMax, "New Y value less than yMin");
+  }
+  else if (p.y > xyChart.yMax)
+  {
+    scaled = scaleY(xyChart.yMin, p.y + (growFactor * fabs(p.y)), "New Y value more than yMax");
+  }
+  else if ((xyChart.yMax - xyChart.yMin) > (shrinkFactor * (fMax - fMin)))
+  {
+    float yRange = fMax - fMin;
+    float yMid = fMin + (yRange / 2);
+    float yLimit = yRange * (shrinkFactor - 2) / 2;
+    scaled = scaleY(yMid - yLimit, yMid + yLimit, "Y limits too large relative to Y range.");
+  }
+  return (scaled);
 }
 
 void setup()
@@ -126,7 +166,7 @@ void setup()
   }
 
   fMean = allTimeSum = allTimeSamples = 0; // Initialize fMean
-  
+
   // Initialize the force sensor
   hx711.begin(HX711_A_DOUT, HX711_A_SCK);
   hx711.tare(20);      // Tare with 20 readings (default is 10)
@@ -173,10 +213,10 @@ void setup()
 // Read data and throw it at the screen forever
 void loop(void)
 {
-  int i;                                                       // Loop indices
-  ChartXY::point p, p0, p1;                                    // Temporary points to hold queue values
-  float dx;                                                    // Delta-X, for interleaved line scrolling on X axis
-  float fMin=0, fMax=0;
+  int i;                    // Loop indices
+  ChartXY::point p, p0, p1; // Temporary points to hold queue values
+  float dx;                 // Delta-X, for interleaved line scrolling on X axis
+  float fMin = 0, fMax = 0;
   boolean scrolling = false, noise = false;
   String legend;
 
@@ -184,7 +224,7 @@ void loop(void)
 
   // Get smoothed value from the dataset:
   if (hx711.is_ready())
-
+  {
     // All of the time-based logic will blow up when millis() overflows (~49 days).
     if (millis() > (((xPrev + t_offset) * 1000) + dataInterval))
     {
@@ -196,37 +236,23 @@ void loop(void)
       fMean = allTimeSum / allTimeSamples;
       p.y -= fMean; // Normalize the reading by subtracting the average force reading
 
-      // Work out the min/max values we have in the queue
+      // Report the current [time, force] value
+      if (DEBUG)
+      {
+        Serial.print("\nCurrent time, force point: ");
+        Serial.print(p.x);
+        Serial.print(", ");
+        Serial.println(p.y);
+      }
+
       if (fQ.getCount() > 20)
       {
         p0 = getMinMax();
         fMin = p0.x;
-        fMax = p0.y;
-
-        // Scale the Y axis if needed
-        int shrinkFactor = 8;
-        int growFactor = 0.1;
-        if (p.y < xyChart.yMin)
-        {
-          noise = scaleY(p.y - abs(p.y * growFactor), xyChart.yMax);
-        }
-        else if (p.y > xyChart.yMax)
-        {
-          noise = scaleY(xyChart.yMin, p.y + abs(p.y * growFactor));
-        }
-        else if ((xyChart.yMax - xyChart.yMin) > (shrinkFactor * (fMax - fMin)))
-        {
-          
-          if(abs(fMin) > abs(fMax)){
-
-          noise = scaleY(-abs(fMin * (shrinkFactor-2)/2), abs(fMin * (shrinkFactor-2)/2));
-          } else{
-           noise = scaleY(-abs(fMax * (shrinkFactor-2)/2), abs(fMax * (shrinkFactor-2)/2));
-            //scaleY(fMin - abs(fMin * 3), fMax + abs(fMax * 3));
-          }
-        }
+        fMax = p0.y;              // Work out the min/max values we have in the queue
+        noise = autoScale(p0, p); // Autoscale the data in Y
       }
-
+      // Draw a live legend with current/min/max/mean values
       legend = "Curr:" + String(p.y, 1) + "    ";
       xyChart.drawLegend(tft, legend, 230, 0, 1, YELLOW);
       legend = " Max:" + String(fMax, 1) + "    ";
@@ -234,16 +260,7 @@ void loop(void)
       legend = " Min:" + String(fMin, 1) + "    ";
       xyChart.drawLegend(tft, legend, 230, 20, 1, GREEN);
       legend = "Norm:" + String(fMean, 1) + "    ";
-      xyChart.drawLegend(tft, legend, 230, 30, 1, ORANGE);
-
-      // Report the current [time, force] value
-      if (DEBUG)
-      {
-        Serial.print(p.x);
-        Serial.print(", ");
-        Serial.println(p.y);
-        Serial.println(String("fMin = ") + String(fMin) + String(", fMax = ") + String(fMax));
-      }
+      xyChart.drawLegend(tft, legend, 230, 30, 1, DKORANGE);
 
       // Check if the queue is full
       if (fQ.isFull())
@@ -288,4 +305,5 @@ void loop(void)
         noise = false;
       }
     }
+  }
 }
