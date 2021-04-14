@@ -6,7 +6,16 @@ Requires hx711 load cell board, compatible load cell (this one is 20kg), and ser
 - Clone the Photonsters/Print-Load-Sensor repository from the Git pane
 - File->Open Folder, then navigate to this ForceSensorGraph directory
 - PlatformIO will parse platformio.ini and should install the required frameworks and libraries for you
-- Navigate to the libdeps\<board>\TFT_ILI9341 directory and modify User_Setup.h:
+- Navigate to the libdeps\<board>\TFT_ILI9341 directory and modify User_Setup.h and comment out all but one font:
+  ```
+  #define LOAD_GLCD   // Font 1. Original Adafruit 8 pixel font needs ~1820 bytes in FLASH
+// #define LOAD_FONT2  // Font 2. Small 16 pixel high font, needs ~3534 bytes in FLASH, 96 characters
+// #define LOAD_FONT4  // Font 4. Medium 26 pixel high font, needs ~5848 bytes in FLASH, 96 characters
+// #define LOAD_FONT6  // Font 6. Large 48 pixel font, needs ~2666 bytes in FLASH, only characters 1234567890:-.apm
+// #define LOAD_FONT7  // Font 7. 7 segment 48 pixel font, needs ~2438 bytes in FLASH, only characters 1234567890:.
+// #define LOAD_FONT8  // Font 8. Large 75 pixel font needs ~3256 bytes in FLASH, only characters 1234567890:-.
+```
+  Then define these pins:
   ```
   #define TFT_CS   SCL  // Chip select control pin
   #define TFT_DC   SDA  // Data Command control pin
