@@ -13,7 +13,6 @@ https://github.com/KrisKasprzak/GraphingFunction/blob/master/Graph.ino
 */
 
 #include <Arduino.h>
-#include <SPI.h>
 #include <TFT_Charts.h>
 #include <HX711.h>
 #include <OneButton.h>
