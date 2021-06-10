@@ -17,19 +17,29 @@ https://github.com/KrisKasprzak/GraphingFunction/blob/master/Graph.ino
 #include <HX711.h>
 #include <OneButton.h>
 #include <cppQueue.h>
-#include "pins.h" // Customize TFT and hx711 pins in here
 // #include <EEPROM.h>
-
-#define DEBUG 0 // Set to 1 to get program status on the Serial monitor
+#include "loadCell.h"
 
 // Initialize some global variables
 const int dataInterval = 250;      // How often (ms) to sample and plot data
-const int fQLen = 100;             // How many points to keep on the FIFO queue?
+extern const int fQLen = 100;             // How many points to keep on the FIFO queue?
 const int calVal_eepromAdress = 0; // What EEPROM address should store the calibration
-float t_offset = 0;                // Offset for t=0 on X.
-float xPrev = 0;                   // Previous value for X
-float yPrev = 0;                   // Previous value for Y
-float fMean, allTimeSum, allTimeSamples;
+float lastT = 0, t_offset = 0;     // Offset for t=0 on X.
+
+// Global external variables to accumulate all-time mean force, and handle button state.
+extern float fMean, allTimeSum, allTimeSamples;
+extern boolean taring;      // Taring button activated?
+extern boolean calibrating; // Calibration button activated?
+extern boolean done;        // Done calibrating?
+
+// Button and ADC objects
+extern OneButton tareButton; // OneButton constructor
+extern HX711 hx711;          // HX711 constructor
+
+// Prototype declarations for functions in chart.cpp
+ChartXY::point getMinMax();
+boolean scaleY(float yMin, float yMax, String reason);
+boolean autoScale(ChartXY::point mm, ChartXY::point p);
 
 // Instantiate a cppQueue to store fQLen number of points
 cppQueue fQ(sizeof(ChartXY::point), fQLen, FIFO);
@@ -38,116 +48,7 @@ cppQueue fQ(sizeof(ChartXY::point), fQLen, FIFO);
 // On Uno/Leonardo, pins #13, #12, #11 and the #defines in TFT_ILI9341/User_Setup.h
 TFT_ILI9341 tft = TFT_ILI9341(TFT_CS, TFT_DC);
 
-OneButton tareButton(TARE_PIN, false); // OneButton constructor | false -> pullup
-HX711 hx711;                           // HX711 constructor
-ChartXY xyChart;                       // ChartXY constructor
-
-void tareHandler()
-{
-  if (DEBUG)
-  {
-    Serial.print("Taring...");
-  }
-  delay(500);   // Let things settle for 500ms before reading.
-  hx711.tare(); // Take the tare reading (10 samples is default)
-  if (DEBUG)
-  {
-    Serial.println("...Done.");
-  }
-  fMean = allTimeSum = allTimeSamples = 0;
-}
-
-void calibrateHandler()
-{
-  if (DEBUG)
-  {
-    Serial.print("Calibration routine to go here...");
-  }
-  hx711.set_scale(2);
-  hx711.tare();
-}
-
-ChartXY::point getMinMax()
-{
-  int i;
-  float min, max;
-  ChartXY::point p;
-
-  // Initialize fmin, fMax with the first y-value on the queue
-  fQ.peekIdx(&p, 0);
-  min = p.y;
-  max = p.y;
-
-  for (i = 1; i <= fQLen; i++)
-  {
-    fQ.peekIdx(&p, i);
-    if (p.y < min)
-    {
-      min = p.y;
-    }
-    if (p.y > max)
-    {
-      max = p.y;
-    }
-  }
-  p.x = min; // Return min as the x-coord of this "point"
-  p.y = max; // Return max as the y-coord of this "point"
-  return (p);
-}
-
-boolean scaleY(float yMin, float yMax, String reason)
-{
-
-  if (DEBUG)
-  {
-    Serial.println(reason);
-    Serial.println("Current Y limits: " + String(xyChart.yMin) + ", " + String(xyChart.yMax));
-    Serial.println("Scaling Y to range " + String(yMin) + ", " + String(yMax));
-  }
-  tft.fillScreen(xyChart.tftBGColor);
-  xyChart.drawTitleChart(tft, "Load Cell A");
-  xyChart.setAxisLimitsY(yMin, yMax, (yMax - yMin) / 8);
-  //xyChart.eraseChartRegion(tft);
-  xyChart.drawAxisY(tft, 10);
-  xyChart.drawLabelsY(tft);
-  xyChart.drawAxisX(tft, 10);
-  xyChart.drawLabelsX(tft);
-  xyChart.drawY0(tft);
-  return (true);
-}
-
-// Scale the Y axis if needed
-boolean autoScale(ChartXY::point mm, ChartXY::point p)
-{
-  float fMin = mm.x;
-  float fMax = mm.y;
-  float shrinkFactor = 7; // Determines the default Y range in relation to the current min/max values when shrinking limits
-  float growFactor = 0.1; // Determines the additional Y range added to the current min/max values when expanding limits
-  boolean scaled = false;
-
-  if (DEBUG)
-  {
-    Serial.println("\nCheck limits: Current Y value is " + String(p.y));
-    Serial.println("fMin = " + String(fMin) + ", fMax = " + String(fMax));
-  }
-
-  if (p.y < xyChart.yMin)
-  {
-    scaled = scaleY(p.y - (growFactor * fabs(p.y)), xyChart.yMax, "New Y value less than yMin");
-  }
-  else if (p.y > xyChart.yMax)
-  {
-    scaled = scaleY(xyChart.yMin, p.y + (growFactor * fabs(p.y)), "New Y value more than yMax");
-  }
-  else if ((xyChart.yMax - xyChart.yMin) > (shrinkFactor * (fMax - fMin)))
-  {
-    float yRange = fMax - fMin;
-    float yMid = fMin + (yRange / 2);
-    float yLimit = yRange * (shrinkFactor - 2) / 2;
-    scaled = scaleY(yMid - yLimit, yMid + yLimit, "Y limits too large relative to Y range.");
-  }
-  return (scaled);
-}
+ChartXY xyChart; // ChartXY constructor
 
 void setup()
 {
@@ -167,7 +68,7 @@ void setup()
   fMean = allTimeSum = allTimeSamples = 0; // Initialize fMean
 
   // Initialize the force sensor
-  hx711.begin(HX711_A_DOUT, HX711_A_SCK);
+  hx711.begin(HX711_DOUT, HX711_SCK);
   hx711.tare(20);      // Tare with 20 readings (default is 10)
   hx711.set_scale(30); // This should eventually come out of EEPROM
 
@@ -180,6 +81,7 @@ void setup()
   pinMode(TARE_PIN, INPUT_PULLUP);
   tareButton.attachClick(tareHandler);
   tareButton.attachLongPressStart(calibrateHandler);
+  tareButton.attachDoubleClick(endHandler);
 
   // Seed the queue with the first point of the first line (origin)
   ChartXY::point p;
@@ -221,19 +123,32 @@ void loop(void)
 
   tareButton.tick(); // Check the tare button
 
+  if (taring)
+  {
+    taring = false;
+    doTare();
+  }
+
+  if (calibrating)
+  {
+    done = false;
+    doCalibration(tft);
+  }
+
   // Get smoothed value from the dataset:
   if (hx711.is_ready())
   {
     // All of the time-based logic will blow up when millis() overflows (~49 days).
-    if (millis() > (((xPrev + t_offset) * 1000) + dataInterval))
+    if (millis() > (((lastT + t_offset) * 1000) + dataInterval))
     {
       p.y = hx711.get_units();                   // Read the load cell value as a float (4 bytes on 8-bit AVRs)
       p.x = (float(millis()) / 1000 - t_offset); // Elapsed time in seconds.  (Why must I cast millis() here?)
+      p.y = -p.y;                                // Invert the hx711 reading - this is dependent on the orientation.
 
       allTimeSamples += 1;
       allTimeSum += p.y;
       fMean = allTimeSum / allTimeSamples;
-      p.y -= fMean; // Normalize the reading by subtracting the average force reading
+      // p.y -= fMean; // Normalize the reading by subtracting the average force reading
 
       // Report the current [time, force] value
       if (DEBUG)
@@ -277,9 +192,8 @@ void loop(void)
         dx = 0;
       }
 
+      lastT = p.x;
       fQ.push(&p); // Update the queue with latest value
-      xPrev = p.x;
-      yPrev = p.y;
 
       if (scrolling)
       { // Erase the line between between two oldest points.
