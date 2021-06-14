@@ -3,10 +3,9 @@
 #include <OneButton.h>
 #include <TFT_ILI9341.h>
 #include <TFT_Charts.h>
-#include "loadCell.h"
+#include "setup.h"
 
 // Global variables to accumulate all-time (between tares) mean force, and handle button state
-float fMean, allTimeSum, allTimeSamples;
 boolean taring = false;      // Taring button activated?
 boolean calibrating = false; // Calibration button activated?
 boolean done;                // Done calibrating?
@@ -14,6 +13,7 @@ boolean done;                // Done calibrating?
 // External globals for the chart object
 extern TFT_ILI9341 tft;
 extern ChartXY xyChart;
+extern float fMean, allTimeSum, allTimeSamples;
 
 OneButton tareButton(TARE_PIN, INPUT); // OneButton constructor | the button is pulled down by default
 HX711 hx711;                           // HX711 constructor
@@ -104,8 +104,8 @@ void doCalibration(TFT_ILI9341 &tft)
         {
             hx711.set_scale(calFactor);
             kgForce = hx711.get_units(10);              // Get a sample -> we are trying to make this value be 1.00
-            calFactor = calFactor * kgForce;            // Multiply the calibration factor by the get_units return value
-            if ((kgForce < 1.005) && (kgForce > 0.995)) // Did this calibration factor produce a 1kg +/- 0.5% output?
+            calFactor = calFactor * kgForce / 1000;            // Multiply the calibration factor by the get_units return value
+            if ((kgForce < 1005) && (kgForce > 995)) // Did this calibration factor produce a 1kg +/- 0.5% output?
             {
                 converged++;         // We are one count closer to convergence
                 calSum += calFactor; // Build a sum so we can average the successful values later
@@ -137,7 +137,7 @@ void doCalibration(TFT_ILI9341 &tft)
     tft.println(round(calAvg));
     delay(2000);
     hx711.tare(20);
-    delay(1000000);
+    delay(5000);
 
     calibrating = false;
 }

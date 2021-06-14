@@ -18,19 +18,19 @@ https://github.com/KrisKasprzak/GraphingFunction/blob/master/Graph.ino
 #include <OneButton.h>
 #include <cppQueue.h>
 // #include <EEPROM.h>
-#include "loadCell.h"
+#include "setup.h"
 
 // Initialize some global variables
-const int dataInterval = 250;      // How often (ms) to sample and plot data
-extern const int fQLen = 100;             // How many points to keep on the FIFO queue?
-const int calVal_eepromAdress = 0; // What EEPROM address should store the calibration
-float lastT = 0, t_offset = 0;     // Offset for t=0 on X.
+float fMean, allTimeSum, allTimeSamples;
+float lastT = 0, t_offset = 0; // Offset for t=0 on X.
 
-// Global external variables to accumulate all-time mean force, and handle button state.
-extern float fMean, allTimeSum, allTimeSamples;
-extern boolean taring;      // Taring button activated?
-extern boolean calibrating; // Calibration button activated?
-extern boolean done;        // Done calibrating?
+// Global external variables .
+extern boolean taring;               // Taring button activated?
+extern boolean calibrating;          // Calibration button activated?
+extern boolean done;                 // Done calibrating?
+extern const int dataInterval; // How often (ms) to sample and plot data
+extern const uint8_t fQLen;     // How many points to keep on the FIFO queue?
+extern const int calValAddr;         // What EEPROM address should store the calibration
 
 // Button and ADC objects
 extern OneButton tareButton; // OneButton constructor
@@ -64,6 +64,10 @@ void setup()
     Serial.print(fQLen);
     Serial.println(" points.");
   }
+
+  // Drive LCD_SPI_EN low to enable the 5V -> 3.3V logic converters
+  pinMode(LCD_SPI_EN, OUTPUT);
+  digitalWrite(LCD_SPI_EN, LOW);
 
   fMean = allTimeSum = allTimeSamples = 0; // Initialize fMean
 
@@ -99,7 +103,7 @@ void setup()
   }
   xyChart.setAxisLimitsX(0, 30, 6);
   xyChart.setAxisLimitsY(-100, 100, 25);
-  xyChart.drawTitleChart(tft, "Load Cell A");
+  xyChart.drawTitleChart(tft, "Z-Axis Force");
   xyChart.drawAxisX(tft, 10);
   xyChart.drawAxisY(tft, 10);
   xyChart.drawLabelsX(tft);
@@ -114,7 +118,7 @@ void setup()
 // Read data and throw it at the screen forever
 void loop(void)
 {
-  int i;                    // Loop indices
+  uint8_t i;                    // Loop indices
   ChartXY::point p, p0, p1; // Temporary points to hold queue values
   float dx;                 // Delta-X, for interleaved line scrolling on X axis
   float fMin = 0, fMax = 0;
@@ -123,12 +127,14 @@ void loop(void)
 
   tareButton.tick(); // Check the tare button
 
+  // Single click
   if (taring)
   {
     taring = false;
     doTare();
   }
 
+  // Long press
   if (calibrating)
   {
     done = false;
@@ -148,7 +154,6 @@ void loop(void)
       allTimeSamples += 1;
       allTimeSum += p.y;
       fMean = allTimeSum / allTimeSamples;
-      // p.y -= fMean; // Normalize the reading by subtracting the average force reading
 
       // Report the current [time, force] value
       if (DEBUG)
@@ -173,8 +178,8 @@ void loop(void)
       xyChart.drawLegend(tft, legend, 230, 10, 1, RED);
       legend = " Min:" + String(fMin, 1) + "    ";
       xyChart.drawLegend(tft, legend, 230, 20, 1, GREEN);
-      legend = "Norm:" + String(fMean, 1) + "    ";
-      xyChart.drawLegend(tft, legend, 230, 30, 1, DKORANGE);
+      //legend = "Norm:" + String(fMean, 1) + "    ";
+      //xyChart.drawLegend(tft, legend, 230, 30, 1, DKORANGE);
 
       // Check if the queue is full
       if (fQ.isFull())
@@ -212,7 +217,8 @@ void loop(void)
         xyChart.eraseLine(tft, p0.x + dx, p0.y, p1.x + dx, p1.y); // erase it at the old x-axis limits
         xyChart.drawLine(tft, p0.x, p0.y, p1.x, p1.y);            // draw it at the current x-axis limits
       }
-      if (noise) // Wait here for noise to decay (after the graph is drawn) - it looks prettier.
+      // Wait here for noise to decay (after the graph is drawn) - it looks prettier.
+      if (noise)
       {
         delay(300);
         noise = false;

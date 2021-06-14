@@ -1,10 +1,10 @@
 #include <TFT_Charts.h>
 #include <TFT_ILI9341.h>
 #include <cppQueue.h>
-#include "loadCell.h"
+#include "setup.h"
 
 extern cppQueue fQ;
-extern const int fQLen;
+extern const uint8_t fQLen;
 extern ChartXY xyChart;
 extern TFT_ILI9341 tft;
 
@@ -46,14 +46,13 @@ boolean scaleY(float yMin, float yMax, String reason)
     Serial.println("Scaling Y to range " + String(yMin) + ", " + String(yMax));
   }
   tft.fillScreen(xyChart.tftBGColor);
-  xyChart.drawTitleChart(tft, "Load Cell A");
   xyChart.setAxisLimitsY(yMin, yMax, (yMax - yMin) / 8);
-  //xyChart.eraseChartRegion(tft);
   xyChart.drawAxisY(tft, 10);
   xyChart.drawLabelsY(tft);
   xyChart.drawAxisX(tft, 10);
   xyChart.drawLabelsX(tft);
   xyChart.drawY0(tft);
+  xyChart.drawTitleChart(tft, "Load Cell A");
   return (true);
 }
 
@@ -75,10 +74,12 @@ boolean autoScale(ChartXY::point mm, ChartXY::point p)
   if (p.y < xyChart.yMin)
   {
     scaled = scaleY(p.y - (growFactor * fabs(p.y)), xyChart.yMax, "New Y value less than yMin");
+    xyChart.drawTitleChart(tft, "Z-Axis Force");
   }
   else if (p.y > xyChart.yMax)
   {
     scaled = scaleY(xyChart.yMin, p.y + (growFactor * fabs(p.y)), "New Y value more than yMax");
+    xyChart.drawTitleChart(tft, "Z-Axis Force");
   }
   else if ((xyChart.yMax - xyChart.yMin) > (shrinkFactor * (fMax - fMin)))
   {
@@ -86,6 +87,7 @@ boolean autoScale(ChartXY::point mm, ChartXY::point p)
     float yMid = fMin + (yRange / 2);
     float yLimit = yRange * (shrinkFactor - 2) / 2;
     scaled = scaleY(yMid - yLimit, yMid + yLimit, "Y limits too large relative to Y range.");
+    xyChart.drawTitleChart(tft, "Z-Axis Force");
   }
   return (scaled);
 }
