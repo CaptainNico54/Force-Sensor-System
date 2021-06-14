@@ -44,9 +44,9 @@ boolean autoScale(ChartXY::point mm, ChartXY::point p);
 // Instantiate a cppQueue to store fQLen number of points
 cppQueue fQ(sizeof(ChartXY::point), fQLen, FIFO);
 
-// ILI9341 constructor: Use hardware SPI for the TFT.
-// On Uno/Leonardo, pins #13, #12, #11 and the #defines in TFT_ILI9341/User_Setup.h
-TFT_ILI9341 tft = TFT_ILI9341(TFT_CS, TFT_DC);
+// ILI9341 constructor: This library takes width/height for the arguments.
+// Hardware SPI pins are required, and are read from TFT_ILI9341/User_Setup.h
+TFT_ILI9341 tft = TFT_ILI9341(320, 240);
 
 ChartXY xyChart; // ChartXY constructor
 

@@ -43,13 +43,13 @@ void doTare()
     {
         Serial.print("Taring...");
     }
-    delay(500);   // Let things settle for 500ms before reading.
+    delay(800);   // Let things settle for 800ms before reading.
     hx711.tare(); // Take the tare reading (10 samples is default)
     if (DEBUG)
     {
         Serial.println("...Done.");
     }
-    fMean = allTimeSum = allTimeSamples = 0;
+    fMean = allTimeSum = allTimeSamples = 0; // Reset the legend stats
 }
 
 // This should happen when calibrating == true
@@ -77,8 +77,8 @@ void doCalibration(TFT_ILI9341 &tft)
 
     tft.setCursor(0, 60);
     tft.println(" Carefully hang a 1.0kg\n mass from the build plate");
-    tft.setCursor(0, 100);
-    tft.setTextColor(DKGREEN);
+    tft.setCursor(0, 120);
+    tft.setTextColor(GREEN);
     tft.println(" Then, double-click the\n tare button to calibrate");
 
     while (!done) // Wait for the user to setup the reference mass
@@ -88,24 +88,23 @@ void doCalibration(TFT_ILI9341 &tft)
     }
 
     // Clear the double-click message and inform the user what's happening
-    tft.fillRect(0, 100, tft.width(), tft.height(), xyChart.tftBGColor);
-    tft.setCursor(0, 100);
+    tft.fillRect(0, 120, tft.width(), tft.height(), xyChart.tftBGColor);
+    tft.setCursor(0, 120);
     tft.setTextColor(RED);
-    tft.println("\n CALIBRATING, DO NOT TOUCH");
+    tft.println(" CALIBRATING, DO NOT TOUCH");
     tft.print("  .");
 
     kgForce = calSum = 0;
     calFactor = 1;
 
-    // Calibration scale minimizer
+    // Calibration scale minimizer/de-noiser
     while (converged < 10)
     {
         if (hx711.is_ready())
         {
             hx711.set_scale(calFactor);
-            kgForce = hx711.get_units(10);              // Get a sample -> we are trying to make this value be 1.00
-            calFactor = calFactor * kgForce / 1000;            // Multiply the calibration factor by the get_units return value
-            if ((kgForce < 1005) && (kgForce > 995)) // Did this calibration factor produce a 1kg +/- 0.5% output?
+            kgForce = hx711.get_units(10);                   // Get a sample -> we are trying to make this value be 1000g
+            if ((kgForce < 1005) && (kgForce > 995))         // Did this calibration factor produce a 1kg +/- 0.5% output?
             {
                 converged++;         // We are one count closer to convergence
                 calSum += calFactor; // Build a sum so we can average the successful values later
@@ -115,7 +114,8 @@ void doCalibration(TFT_ILI9341 &tft)
                     Serial.println(converged);
                 }
             }
-
+            // Normalize the calibration factor by the get_units() return value and reference mass
+            calFactor = calFactor * kgForce / referenceMass;
             tft.print(".");
 
             if (DEBUG)
@@ -130,13 +130,18 @@ void doCalibration(TFT_ILI9341 &tft)
 
     calAvg = calSum / converged; // The average of all the converged values will be our actual scale
     hx711.set_scale(calAvg);
-    tft.fillRect(0, 100, tft.width(), tft.height(), xyChart.tftBGColor);
-    tft.setTextColor(YELLOW);
-    tft.setCursor(0, 100);
+    tft.fillScreen(xyChart.tftBGColor);
+    tft.drawRect(55, 3, 206, 33, YELLOW);
+    tft.setTextColor(WHITE);
+    tft.setTextSize(3);
+    tft.setCursor(60, 10);
+    tft.println("CALIBRATION");
+    tft.setTextSize(2);
+
+    tft.setCursor(0, 60);
     tft.print("\n Calibration Converged!\n Constant = ");
     tft.println(round(calAvg));
-    delay(2000);
-    hx711.tare(20);
+
     delay(5000);
 
     calibrating = false;
