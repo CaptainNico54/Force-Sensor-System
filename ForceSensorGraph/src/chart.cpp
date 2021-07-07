@@ -39,7 +39,7 @@ ChartXY::point getMinMax()
 boolean scaleY(float yMin, float yMax, String reason)
 {
 
-  if (DEBUG)
+  if (DEBUG == 2)
   {
     Serial.println(reason);
     Serial.println("Current Y limits: " + String(xyChart.yMin) + ", " + String(xyChart.yMax));
@@ -65,7 +65,7 @@ boolean autoScale(ChartXY::point mm, ChartXY::point p)
   float growFactor = 0.1; // Determines the additional Y range added to the current min/max values when expanding limits
   boolean scaled = false;
 
-  if (DEBUG)
+  if (DEBUG == 2)
   {
     Serial.println("\nCheck limits: Current Y value is " + String(p.y));
     Serial.println("fMin = " + String(fMin) + ", fMax = " + String(fMax));

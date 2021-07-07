@@ -1,4 +1,7 @@
-#define DEBUG 0 // Set to 1 to get program status on the Serial monitor
+// If DEBUG is anything but zero, the program will block until a serial monitor is attached/open
+// Set to 1 to get force sensor values on the serial monitor
+// Set to 2 to get more detailed program status
+#define DEBUG 0
 
 const int dataInterval = 250; // How often (ms) to sample and plot data
 const uint8_t fQLen = 90;     // How many points to keep on the FIFO queue?

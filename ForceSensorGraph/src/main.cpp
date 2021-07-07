@@ -25,12 +25,12 @@ float fMean, allTimeSum, allTimeSamples;
 float lastT = 0, t_offset = 0; // Offset for t=0 on X.
 
 // Global external variables .
-extern boolean taring;               // Taring button activated?
-extern boolean calibrating;          // Calibration button activated?
-extern boolean done;                 // Done calibrating?
+extern boolean taring;         // Taring button activated?
+extern boolean calibrating;    // Calibration button activated?
+extern boolean done;           // Done calibrating?
 extern const int dataInterval; // How often (ms) to sample and plot data
-extern const uint8_t fQLen;     // How many points to keep on the FIFO queue?
-extern const int calValAddr;         // What EEPROM address should store the calibration
+extern const uint8_t fQLen;    // How many points to keep on the FIFO queue?
+extern const int calValAddr;   // What EEPROM address should store the calibration
 
 // Button and ADC objects
 extern OneButton tareButton; // OneButton constructor
@@ -76,7 +76,7 @@ void setup()
   hx711.tare(20);      // Tare with 20 readings (default is 10)
   hx711.set_scale(30); // This should eventually come out of EEPROM
 
-  if (DEBUG)
+  if (DEBUG == 2)
   {
     Serial.println("Finished initializing load cell.");
   }
@@ -97,7 +97,7 @@ void setup()
   tft.begin();
   xyChart.begin(tft);
   tft.fillScreen(BLACK);
-  if (DEBUG)
+  if (DEBUG == 2)
   {
     xyChart.tftInfo();
   }
@@ -118,7 +118,7 @@ void setup()
 // Read data and throw it at the screen forever
 void loop(void)
 {
-  uint8_t i;                    // Loop indices
+  uint8_t i;                // Loop indices
   ChartXY::point p, p0, p1; // Temporary points to hold queue values
   float dx;                 // Delta-X, for interleaved line scrolling on X axis
   float fMin = 0, fMax = 0;
@@ -156,14 +156,18 @@ void loop(void)
       fMean = allTimeSum / allTimeSamples;
 
       // Report the current [time, force] value
-      if (DEBUG)
+      if (DEBUG == 2)
       {
         Serial.print("\nCurrent time, force point: ");
         Serial.print(p.x);
         Serial.print(", ");
-        Serial.println(p.y);
       }
 
+      if (DEBUG)
+      {
+        Serial.println(p.y);
+      }
+      
       if (fQ.getCount() > 20)
       {
         p0 = getMinMax();
