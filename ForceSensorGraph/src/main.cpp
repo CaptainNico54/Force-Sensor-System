@@ -65,21 +65,25 @@ void setup()
     Serial.println(" points.");
   }
 
+  #ifdef PCBV2
   // Drive LCD_SPI_EN low to enable the 5V -> 3.3V logic converters
   pinMode(LCD_SPI_EN, OUTPUT);
   digitalWrite(LCD_SPI_EN, LOW);
+  #endif
 
   fMean = allTimeSum = allTimeSamples = 0; // Initialize fMean
 
   // Initialize the force sensor
   hx711.begin(HX711_DOUT, HX711_SCK);
+   
   hx711.tare(20);      // Tare with 20 readings (default is 10)
-  hx711.set_scale(30); // This should eventually come out of EEPROM
-
-  if (DEBUG == 2)
+   if (DEBUG == 2)
   {
     Serial.println("Finished initializing load cell.");
   }
+  hx711.set_scale(30); // This should eventually come out of EEPROM
+
+
 
   // Tare button setup:
   pinMode(TARE_PIN, INPUT_PULLUP);
