@@ -75,15 +75,13 @@ void setup()
 
   // Initialize the force sensor
   hx711.begin(HX711_DOUT, HX711_SCK);
-   
   hx711.tare(20);      // Tare with 20 readings (default is 10)
-   if (DEBUG == 2)
+  hx711.set_scale(30); // This should eventually come out of EEPROM
+  
+  if (DEBUG == 2)
   {
     Serial.println("Finished initializing load cell.");
   }
-  hx711.set_scale(30); // This should eventually come out of EEPROM
-
-
 
   // Tare button setup:
   pinMode(TARE_PIN, INPUT_PULLUP);
