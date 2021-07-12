@@ -1,4 +1,4 @@
-## PlatformIO project for live graphing of load sensor data to an ILI9341 (or other) TFT
+## PlatformIO project for live graphing of load sensor data to an ILI9341 TFT
 Requires hx711 load cell board, compatible load cell (this one is 20kg), and serial SPI ILI9341 screen.  If your screen can only take 3.3V logic, then you need to drive digital pin 5 low to enable the onboard 5V -> 3.3V logic conversion (this is enabled by default).
 
 - Install and run VSCode
@@ -20,30 +20,13 @@ Requires hx711 load cell board, compatible load cell (this one is 20kg), and ser
 Then define these pins:
 ```
 #define TFT_CS   10  // Chip select control pin
-#define TFT_DC   8  // Data Command control pin
-#define TFT_RST  9  // Reset pin (could use Arduino RESET pin by setting this to -1)
+#define TFT_DC   8   // Data Command control pin
+#define TFT_RST  9   // Reset pin (could use the AVR's RESET pin by setting this to -1)
 ```
 Finally and optionally, comment out this line as we find it causes stray pixels to be left onscreen with some displays (but not all):
 ```
 // #define FAST_LINE
 ```
 
-- If you want informational messages to the serial monitor, set DEBUG = 1 at the top of setup.h.  This causes the code to block until a serial monitor is present.
+- If you want informational messages to the serial monitor, set DEBUG = 2 at the top of setup.h.  This causes the code to block until a serial monitor is present.
 - Build/Upload the project to your board.
-
-## Wiring the TFT to the load cell board:
-
-| Board (wire in photo) | TFT |
-| ------- | ----- |
-| MOSI (Orange)  | MOSI |
-| MISO (Purple)  | MISO |
-| RST (Blue) | Reset |
-| SCK (Brown) | SCK |
-| SCL (Green) | CS |
-| SDA (Yellow) | D/C |
-| VCC (Red) | VCC |
-| GND (Black) | GND |
-
-Also jump VCC over to the LED pin on the TFT. If your MCU is 5V, and your screen only accepts 3.3V logic, you also need at least 5 channels of logic conversion for MOSI, MISO, SCK, SCL(CS), and SDA(D/C).
-![TFT Wiring](test/InkedTFT.jpg)
-![TFT Load Cell Graphing](test/Breadboard.jpeg)

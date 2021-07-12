@@ -9,10 +9,10 @@
 // If DEBUG is anything but zero, the program will block until a serial monitor is attached/open
 // Set to 1 to get force sensor values on the serial monitor
 // Set to 2 to get more detailed program status
-#define DEBUG 0
+#define DEBUG 2
 
 // Which version of the PCB do you have?
-// #define PCBV1
+//#define PCBV1
 #define PCBV2
 
 #ifdef PCBV1
@@ -31,8 +31,11 @@ const uint8_t TARE_PIN = 13;
 const uint8_t LCD_SPI_EN = 5;
 #endif
 
-const int dataInterval = 250; // How often (ms) to sample and plot data
-const uint8_t fQLen = 90;     // How many points to keep on the FIFO queue?
+// Screen orientation - set to true to invert the LCD
+const boolean flipScreen = false;
+
+const int dataInterval = 250;        // How often (ms) to sample and plot data
+const uint8_t fQLen = 90;            // How many points to keep on the FIFO queue?
 const float referenceMass = 1000;    // Reference mass for calibration routine, in kg
 const uint16_t eepromAddress = 1019; // use the last four bytes of the EEPROM for calibration constant
 

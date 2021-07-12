@@ -24,10 +24,11 @@ https://github.com/KrisKasprzak/GraphingFunction/blob/master/Graph.ino
 float fMean, allTimeSum, allTimeSamples;
 float lastT = 0, t_offset = 0; // Offset for t=0 on X.
 
-// Global external variables .
+// Global external variables
 extern boolean taring;         // Taring button activated?
 extern boolean calibrating;    // Calibration button activated?
 extern boolean done;           // Done calibrating?
+extern const boolean flipScreen;     // Invert the LCD orientation?
 extern const int dataInterval; // How often (ms) to sample and plot data
 extern const uint8_t fQLen;    // How many points to keep on the FIFO queue?
 extern const int calValAddr;   // What EEPROM address should store the calibration
@@ -66,7 +67,7 @@ void setup()
   }
 
   #ifdef PCBV2
-  // Drive LCD_SPI_EN low to enable the 5V -> 3.3V logic converters
+  // Drive LCD_SPI_EN to 0V, to enable the onboard 5V -> 3.3V logic converters
   pinMode(LCD_SPI_EN, OUTPUT);
   digitalWrite(LCD_SPI_EN, LOW);
   #endif
@@ -76,7 +77,7 @@ void setup()
   // Initialize the force sensor
   hx711.begin(HX711_DOUT, HX711_SCK);
   hx711.tare(20);      // Tare with 20 readings (default is 10)
-  hx711.set_scale(30); // This should eventually come out of EEPROM
+  hx711.set_scale(18); // This should eventually come out of EEPROM
   
   if (DEBUG == 2)
   {
@@ -98,6 +99,13 @@ void setup()
   // Initialize the screen
   tft.begin();
   xyChart.begin(tft);
+
+  // Invert the screen if requested in setup.h
+  if( flipScreen)
+  {
+    tft.setRotation(1);
+  }
+
   tft.fillScreen(BLACK);
   if (DEBUG == 2)
   {
