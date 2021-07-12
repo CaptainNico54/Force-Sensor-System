@@ -60,8 +60,8 @@ boolean autoScale(ChartXY::point mm, ChartXY::point p)
 {
   float fMin = mm.x;
   float fMax = mm.y;
-  float expandFract = 7; // Determines the default Y range in relation to the current min/max values when expanding limits
-  float growFactor = 0.1; // Determines the additional Y range added to the current min/max values when expanding limits
+  float expandFactor = 7; // Determines the default Y range in relation to the current min/max values when expanding limits
+  float limitFactor = 0.1; // Determines the additional Y range added to the current min/max values when expanding limits
   boolean scaled = false;
 
   if (DEBUG == 2)
@@ -72,20 +72,20 @@ boolean autoScale(ChartXY::point mm, ChartXY::point p)
 
   if (p.y < xyChart.yMin)
   {
-    scaled = scaleY(p.y - (growFactor * fabs(p.y)), xyChart.yMax, "New Y value less than yMin");
+    scaled = scaleY(p.y - (limitFactor * fabs(p.y)), xyChart.yMax, "New Y value less than yMin");
     xyChart.drawTitleChart(tft, "Z-Axis Force");
   }
   else if (p.y > xyChart.yMax)
   {
-    scaled = scaleY(xyChart.yMin, p.y + (growFactor * fabs(p.y)), "New Y value more than yMax");
+    scaled = scaleY(xyChart.yMin, p.y + (limitFactor * fabs(p.y)), "New Y value more than yMax");
     xyChart.drawTitleChart(tft, "Z-Axis Force");
   }
   // Expansion heuristic (make the data fill at least 1/expandFract of the y range )
-  else if ((xyChart.yMax - xyChart.yMin) > (expandFract * (fMax - fMin)))
+  else if ((xyChart.yMax - xyChart.yMin) > (expandFactor * (fMax - fMin)))
   {
     float yRange = fMax - fMin;
     float yMid = fMin + (yRange / 2);
-    float yLimit = yRange * (expandFract - 2) / 2;
+    float yLimit = yRange * (expandFactor - 2) / 2;
     scaled = scaleY(yMid - yLimit, yMid + yLimit, "Y limits too large relative to Y range");
     xyChart.drawTitleChart(tft, "Z-Axis Force");
   }

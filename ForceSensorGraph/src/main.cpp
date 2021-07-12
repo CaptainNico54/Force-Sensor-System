@@ -25,10 +25,10 @@ float fMean, allTimeSum, allTimeSamples;
 float lastT = 0, t_offset = 0; // Offset for t=0 on X.
 
 // Global external variables
-extern boolean taring;           // Taring button activated?
-extern boolean calibrating;      // Calibration button activated?
-extern boolean done;             // Done calibrating?
-extern const int calValAddr;     // What EEPROM address should store the calibration
+extern boolean taring;       // Taring button activated?
+extern boolean calibrating;  // Calibration button activated?
+extern boolean done;         // Done calibrating?
+extern const int calValAddr; // What EEPROM address should store the calibration
 
 // Button and ADC objects
 extern OneButton tareButton; // OneButton constructor
@@ -97,10 +97,10 @@ void setup()
   tft.begin();
   xyChart.begin(tft);
 
-  // Invert the screen if requested in setup.h
-  #ifdef FLIP_TFT
-    tft.setRotation(1);
-  #endif
+// Invert the screen if requested in setup.h
+#ifdef FLIP_TFT
+  tft.setRotation(1);
+#endif
 
   tft.fillScreen(BLACK);
   if (DEBUG == 2)
@@ -155,8 +155,20 @@ void loop(void)
     {
       p.y = hx711.get_units();                   // Read the load cell value as a float (4 bytes on 8-bit AVRs)
       p.x = (float(millis()) / 1000 - t_offset); // Elapsed time in seconds.  (Why must I cast millis() here?)
-      p.y = -p.y;                                // Invert the hx711 reading - this is dependent on the orientation.
+      #ifdef INVERT_Y
+        p.y = -p.y; // Invert the hx711 reading - this is dependent on the orientation.
+      #endif
 
+      // Check for an outlier (presumed glitch/noise)
+      if ((fMax > 0 && (p.y > 1000 * fMax)) || (fMin < 0 && (p.y < 1000 * fMin)))
+      {
+        if (DEBUG == 2)
+        {
+          Serial.print("DETECTED OUTLIER " + String(p.y) + " - IGNORING THIS VALUE.");
+        }
+        p.y = fMean;
+      }
+      
       allTimeSamples += 1;
       allTimeSum += p.y;
       fMean = allTimeSum / allTimeSamples;
@@ -186,18 +198,20 @@ void loop(void)
       xyChart.drawLegend(tft, legend, 230, 0, 1, YELLOW);
       legend = " Max:" + String(fMax, 1) + "    ";
       xyChart.drawLegend(tft, legend, 230, 10, 1, RED);
+      legend = "Mean:" + String(fMean, 1) + "    ";
+      xyChart.drawLegend(tft, legend, 230, 20, 1, DKORANGE);
       legend = " Min:" + String(fMin, 1) + "    ";
-      xyChart.drawLegend(tft, legend, 230, 20, 1, GREEN);
-      //legend = "Norm:" + String(fMean, 1) + "    ";
-      //xyChart.drawLegend(tft, legend, 230, 30, 1, DKORANGE);
+      xyChart.drawLegend(tft, legend, 230, 30, 1, GREEN);
+    
+      legend = "";
 
       // Check if the queue is full
       if (fQ.isFull())
       {
         scrolling = true;
-        fQ.pop(&p0);                                        // Pop the oldest point
-        fQ.peek(&p1);                                       // Peek at the new oldest point -> New xMin
-        dx = p1.x - p0.x;                                   // We will move the axis right by dx, remember it
+        fQ.pop(&p0);                                                // Pop the oldest point
+        fQ.peek(&p1);                                               // Peek at the new oldest point -> New xMin
+        dx = p1.x - p0.x;                                           // We will move the axis right by dx, remember it
         xyChart.setAxisLimitsX(p1.x, xyChart.xMax + dx, XTICKTIME); // New X axis limits run from oldest point to xMax+dx
       }
       else

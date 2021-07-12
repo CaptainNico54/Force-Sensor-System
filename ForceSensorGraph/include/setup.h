@@ -32,8 +32,11 @@ Look for this file in the folder .pio/libdeps/<platform>/TFT_ILI9341
 // Screen orientation - uncomment the next line to invert the LCD
 // #define FLIP_TFT
 
-#define DATA_INTERVAL 350   // How often (ms) to sample and plot data
-#define QUEUE_LENGTH 90     // How many points to keep on the FIFO queue?
+// Comment the next line in/out to invert the sign of the load cell values
+// #define INVERT_Y
+
+#define DATA_INTERVAL 333   // How often (ms) to sample and plot data
+#define QUEUE_LENGTH 100     // How many points to keep on the FIFO queue?
 #define XRANGE 35           // How many seconds does the X axis represent?
 #define XTICKTIME 5         // How many seconds between X tick marks?
 #define REFERENCE_MASS 1000 // Reference mass for calibration routine, in kg
