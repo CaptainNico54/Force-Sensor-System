@@ -28,7 +28,6 @@ float lastT = 0, t_offset = 0; // Offset for t=0 on X.
 extern boolean taring;           // Taring button activated?
 extern boolean calibrating;      // Calibration button activated?
 extern boolean done;             // Done calibrating?
-extern const boolean flipScreen; // Invert the LCD orientation?
 extern const int dataInterval;   // How often (ms) to sample and plot data
 extern const uint8_t fQLen;      // How many points to keep on the FIFO queue?
 extern const int calValAddr;     // What EEPROM address should store the calibration
@@ -101,10 +100,9 @@ void setup()
   xyChart.begin(tft);
 
   // Invert the screen if requested in setup.h
-  if (flipScreen)
-  {
+  #ifdef FLIP_TFT
     tft.setRotation(1);
-  }
+  #endif
 
   tft.fillScreen(BLACK);
   if (DEBUG == 2)

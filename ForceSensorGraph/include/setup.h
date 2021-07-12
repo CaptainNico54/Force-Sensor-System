@@ -29,8 +29,8 @@ Look for this file in the folder .pio/libdeps/<platform>/TFT_ILI9341
 // Set to 2 to get more detailed program status
 #define DEBUG 0
 
-// Screen orientation - set to true to invert the LCD
-const boolean flipScreen = false;
+// Screen orientation - uncomment the next line to invert the LCD
+// #define FLIP_TFT
 
 const int dataInterval = 250;        // How often (ms) to sample and plot data
 const uint8_t fQLen = 90;            // How many points to keep on the FIFO queue?
