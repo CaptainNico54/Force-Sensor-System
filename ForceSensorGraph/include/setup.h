@@ -27,7 +27,7 @@ Look for this file in the folder .pio/libdeps/<platform>/TFT_ILI9341
 // If DEBUG is anything but zero, the program will block until a serial monitor is attached/open
 // Set to 1 to get force sensor values on the serial monitor
 // Set to 2 to get more detailed program status
-#define DEBUG 2
+#define DEBUG 0
 
 // Screen orientation - set to true to invert the LCD
 const boolean flipScreen = false;
