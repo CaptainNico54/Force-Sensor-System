@@ -80,12 +80,19 @@ boolean autoScale(ChartXY::point mm, ChartXY::point p)
     scaled = scaleY(xyChart.yMin, p.y + (growFactor * fabs(p.y)), "New Y value more than yMax");
     xyChart.drawTitleChart(tft, "Z-Axis Force");
   }
+  // Expansion heuristic (make the data fill at least 1/7th of the y range )
   else if ((xyChart.yMax - xyChart.yMin) > (shrinkFactor * (fMax - fMin)))
   {
     float yRange = fMax - fMin;
     float yMid = fMin + (yRange / 2);
     float yLimit = yRange * (shrinkFactor - 2) / 2;
-    scaled = scaleY(yMid - yLimit, yMid + yLimit, "Y limits too large relative to Y range.");
+    scaled = scaleY(yMid - yLimit, yMid + yLimit, "Y limits too large relative to Y range");
+    xyChart.drawTitleChart(tft, "Z-Axis Force");
+  }
+  // Centering heuristic (keep empty space differences within 40% of the y range)
+  else if (fabs((xyChart.yMax - fMax) - (fMin - xyChart.yMin)) > fabs(0.4 * (fMax - fMin)))
+  {
+    scaled = scaleY(fMin - (0.5 * (fMax - fMin)), fMax + (0.5 * (fMax - fMin)), "Y range not centered");
     xyChart.drawTitleChart(tft, "Z-Axis Force");
   }
   return (scaled);
