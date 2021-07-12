@@ -1,9 +1,10 @@
-/* 
-    NOTE: the constructor for the TFT object uses hardwired values for the SPI pins.
-    So, currently these must be set in the User_Setup.h file that comes with the library.
-    For the latest board (PCBV2), TFT_DC == 8; TFT_RST == 9; TFT_CS == 10.
-    Also, comment out all the fonts except LOAD_GLCD, and comment out the FAST_LINE feature.
-    Look for this file in the folder .pio/libdeps/<platform>/TFT_ILI9341
+/*
+NOTE: the constructor for the TFT object uses hardwired values for the SPI pins.
+So, currently these must be set in the User_Setup.h file that comes with the library.
+For the latest board (PCBV2), TFT_DC == 8; TFT_RST == 9; TFT_CS == 10.
+For the older board (PCBV1), TFT_DC == SDA; TFT_RST == -1; TFT_CS == SCL.
+ALSO: You must comment out FAST_LINE, and all the fonts except for LOAD_GLCD
+Look for this file in the folder .pio/libdeps/<platform>/TFT_ILI9341
 */
 
 // If DEBUG is anything but zero, the program will block until a serial monitor is attached/open
@@ -16,19 +17,16 @@
 #define PCBV2
 
 #ifdef PCBV1
-// LoadCell pins
-const uint8_t HX711_DOUT = A1;
-const uint8_t HX711_SCK = A0;
-const uint8_t TARE_PIN = 13;
+    #define HX711_DOUT A1
+    #define HX711_SCK A0
+    #define TARE_PIN 13
 #endif
 
 #ifdef PCBV2
-const uint8_t HX711_DOUT = 1;
-const uint8_t HX711_SCK = 0;
-const uint8_t TARE_PIN = 13;
-
-// Drive LCD_SPI_EN low to enable the 5V -> 3.3V logic converters
-const uint8_t LCD_SPI_EN = 5;
+    #define HX711_DOUT 1
+    #define HX711_SCK 0
+    #define TARE_PIN 13
+    #define LCD_SPI_EN 5 // Drive LCD_SPI_EN low to enable the 5V -> 3.3V logic converters
 #endif
 
 // Screen orientation - set to true to invert the LCD

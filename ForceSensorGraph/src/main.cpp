@@ -25,13 +25,13 @@ float fMean, allTimeSum, allTimeSamples;
 float lastT = 0, t_offset = 0; // Offset for t=0 on X.
 
 // Global external variables
-extern boolean taring;         // Taring button activated?
-extern boolean calibrating;    // Calibration button activated?
-extern boolean done;           // Done calibrating?
-extern const boolean flipScreen;     // Invert the LCD orientation?
-extern const int dataInterval; // How often (ms) to sample and plot data
-extern const uint8_t fQLen;    // How many points to keep on the FIFO queue?
-extern const int calValAddr;   // What EEPROM address should store the calibration
+extern boolean taring;           // Taring button activated?
+extern boolean calibrating;      // Calibration button activated?
+extern boolean done;             // Done calibrating?
+extern const boolean flipScreen; // Invert the LCD orientation?
+extern const int dataInterval;   // How often (ms) to sample and plot data
+extern const uint8_t fQLen;      // How many points to keep on the FIFO queue?
+extern const int calValAddr;     // What EEPROM address should store the calibration
 
 // Button and ADC objects
 extern OneButton tareButton; // OneButton constructor
@@ -66,11 +66,11 @@ void setup()
     Serial.println(" points.");
   }
 
-  #ifdef PCBV2
+#ifdef PCBV2
   // Drive LCD_SPI_EN to 0V, to enable the onboard 5V -> 3.3V logic converters
   pinMode(LCD_SPI_EN, OUTPUT);
   digitalWrite(LCD_SPI_EN, LOW);
-  #endif
+#endif
 
   fMean = allTimeSum = allTimeSamples = 0; // Initialize fMean
 
@@ -78,7 +78,7 @@ void setup()
   hx711.begin(HX711_DOUT, HX711_SCK);
   hx711.tare(20);      // Tare with 20 readings (default is 10)
   hx711.set_scale(18); // This should eventually come out of EEPROM
-  
+
   if (DEBUG == 2)
   {
     Serial.println("Finished initializing load cell.");
@@ -101,7 +101,7 @@ void setup()
   xyChart.begin(tft);
 
   // Invert the screen if requested in setup.h
-  if( flipScreen)
+  if (flipScreen)
   {
     tft.setRotation(1);
   }
@@ -177,7 +177,7 @@ void loop(void)
       {
         Serial.println(p.y);
       }
-      
+
       if (fQ.getCount() > 20)
       {
         p0 = getMinMax();
