@@ -160,7 +160,7 @@ void loop(void)
       #endif
 
       // Check for an outlier (presumed glitch/noise)
-      if ((fMax > 0 && (p.y > 1000 * fMax)) || (fMin < 0 && (p.y < 1000 * fMin)))
+      if ( fabs(p.y) > 20000)
       {
         if (DEBUG == 2)
         {
@@ -168,7 +168,7 @@ void loop(void)
         }
         p.y = fMean;
       }
-      
+
       allTimeSamples += 1;
       allTimeSum += p.y;
       fMean = allTimeSum / allTimeSamples;
