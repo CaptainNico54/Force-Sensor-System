@@ -12,16 +12,16 @@ Look for this file in the folder .pio/libdeps/<platform>/TFT_ILI9341
 */
 
 #ifdef PCBV1
-    #define HX711_DOUT A1
-    #define HX711_SCK A0
-    #define TARE_PIN 13
+#define HX711_DOUT A1
+#define HX711_SCK A0
+#define TARE_PIN 13
 #endif
 
 #ifdef PCBV2
-    #define HX711_DOUT 1
-    #define HX711_SCK 0
-    #define TARE_PIN 13
-    #define LCD_SPI_EN 5 // Drive LCD_SPI_EN low to enable the 5V -> 3.3V logic converters
+#define HX711_DOUT 1
+#define HX711_SCK 0
+#define TARE_PIN 13
+#define LCD_SPI_EN 5 // Drive LCD_SPI_EN low to enable the 5V -> 3.3V logic converters
 #endif
 
 // If DEBUG is anything but zero, the program will block until a serial monitor is attached/open
@@ -32,10 +32,12 @@ Look for this file in the folder .pio/libdeps/<platform>/TFT_ILI9341
 // Screen orientation - uncomment the next line to invert the LCD
 // #define FLIP_TFT
 
-const int dataInterval = 250;        // How often (ms) to sample and plot data
-const uint8_t fQLen = 90;            // How many points to keep on the FIFO queue?
-const float referenceMass = 1000;    // Reference mass for calibration routine, in kg
-const uint16_t eepromAddress = 1019; // use the last four bytes of the EEPROM for calibration constant
+#define DATA_INTERVAL 350   // How often (ms) to sample and plot data
+#define QUEUE_LENGTH 100     // How many points to keep on the FIFO queue?
+#define XRANGE 35           // How many seconds does the X axis represent?
+#define XTICKTIME 5         // How many seconds between X tick marks?
+#define REFERENCE_MASS 1000 // Reference mass for calibration routine, in kg
+#define EEPROM_ADDR 1019    // use the last four bytes of the EEPROM for calibration constant
 
 // Function prototypes
 void tareHandler();

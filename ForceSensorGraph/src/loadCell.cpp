@@ -115,7 +115,7 @@ void doCalibration(TFT_ILI9341 &tft)
                 }
             }
             // Normalize the calibration factor by the get_units() return value and reference mass
-            calFactor = calFactor * kgForce / referenceMass;
+            calFactor = calFactor * kgForce / REFERENCE_MASS;
             tft.print(".");
 
             if (DEBUG)

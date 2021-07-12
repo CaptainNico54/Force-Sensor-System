@@ -4,7 +4,6 @@
 #include "setup.h"
 
 extern cppQueue fQ;
-extern const uint8_t fQLen;
 extern ChartXY xyChart;
 extern TFT_ILI9341 tft;
 
@@ -19,7 +18,7 @@ ChartXY::point getMinMax()
   min = p.y;
   max = p.y;
 
-  for (i = 1; i <= fQLen; i++)
+  for (i = 1; i <= QUEUE_LENGTH; i++)
   {
     fQ.peekIdx(&p, i);
     if (p.y < min)

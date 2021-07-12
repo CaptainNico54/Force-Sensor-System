@@ -28,8 +28,6 @@ float lastT = 0, t_offset = 0; // Offset for t=0 on X.
 extern boolean taring;           // Taring button activated?
 extern boolean calibrating;      // Calibration button activated?
 extern boolean done;             // Done calibrating?
-extern const int dataInterval;   // How often (ms) to sample and plot data
-extern const uint8_t fQLen;      // How many points to keep on the FIFO queue?
 extern const int calValAddr;     // What EEPROM address should store the calibration
 
 // Button and ADC objects
@@ -41,8 +39,8 @@ ChartXY::point getMinMax();
 boolean scaleY(float yMin, float yMax, String reason);
 boolean autoScale(ChartXY::point mm, ChartXY::point p);
 
-// Instantiate a cppQueue to store fQLen number of points
-cppQueue fQ(sizeof(ChartXY::point), fQLen, FIFO);
+// Instantiate a cppQueue to store QUEUE_LENGTH number of points
+cppQueue fQ(sizeof(ChartXY::point), QUEUE_LENGTH, FIFO);
 
 // ILI9341 constructor: This library takes width/height for the arguments.
 // Hardware SPI pins are required, and are read from TFT_ILI9341/User_Setup.h
@@ -61,7 +59,7 @@ void setup()
     Serial.println();
     Serial.println("Starting...");
     Serial.print("Queue size is ");
-    Serial.print(fQLen);
+    Serial.print(QUEUE_LENGTH);
     Serial.println(" points.");
   }
 
@@ -109,7 +107,7 @@ void setup()
   {
     xyChart.tftInfo();
   }
-  xyChart.setAxisLimitsX(0, 30, 6);
+  xyChart.setAxisLimitsX(0, XRANGE, XTICKTIME);
   xyChart.setAxisLimitsY(-100, 100, 25);
   xyChart.drawTitleChart(tft, "Z-Axis Force");
   xyChart.drawAxisX(tft, 10);
@@ -153,7 +151,7 @@ void loop(void)
   if (hx711.is_ready())
   {
     // All of the time-based logic will blow up when millis() overflows (~49 days).
-    if (millis() > (((lastT + t_offset) * 1000) + dataInterval))
+    if (millis() > (((lastT + t_offset) * 1000) + DATA_INTERVAL))
     {
       p.y = hx711.get_units();                   // Read the load cell value as a float (4 bytes on 8-bit AVRs)
       p.x = (float(millis()) / 1000 - t_offset); // Elapsed time in seconds.  (Why must I cast millis() here?)
@@ -200,7 +198,7 @@ void loop(void)
         fQ.pop(&p0);                                        // Pop the oldest point
         fQ.peek(&p1);                                       // Peek at the new oldest point -> New xMin
         dx = p1.x - p0.x;                                   // We will move the axis right by dx, remember it
-        xyChart.setAxisLimitsX(p1.x, xyChart.xMax + dx, 6); // New X axis limits run from oldest point to xMax+dx
+        xyChart.setAxisLimitsX(p1.x, xyChart.xMax + dx, XTICKTIME); // New X axis limits run from oldest point to xMax+dx
       }
       else
       {
@@ -222,7 +220,7 @@ void loop(void)
         xyChart.drawY0(tft);
       }
       // Now move lines one by one (looks SO much better than clearing/drawing, but bookeeping...)
-      for (i = 1; i <= fQLen; i++)
+      for (i = 1; i <= QUEUE_LENGTH; i++)
       {
         fQ.peekIdx(&p0, i - 1);                                   // Peek at tail of line to move
         fQ.peekIdx(&p1, i);                                       // Peek at head of line to move
