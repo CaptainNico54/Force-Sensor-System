@@ -60,7 +60,7 @@ boolean autoScale(ChartXY::point mm, ChartXY::point p)
 {
   float fMin = mm.x;
   float fMax = mm.y;
-  float shrinkFactor = 7; // Determines the default Y range in relation to the current min/max values when shrinking limits
+  float expandFract = 7; // Determines the default Y range in relation to the current min/max values when expanding limits
   float growFactor = 0.1; // Determines the additional Y range added to the current min/max values when expanding limits
   boolean scaled = false;
 
@@ -80,19 +80,22 @@ boolean autoScale(ChartXY::point mm, ChartXY::point p)
     scaled = scaleY(xyChart.yMin, p.y + (growFactor * fabs(p.y)), "New Y value more than yMax");
     xyChart.drawTitleChart(tft, "Z-Axis Force");
   }
-  // Expansion heuristic (make the data fill at least 1/7th of the y range )
-  else if ((xyChart.yMax - xyChart.yMin) > (shrinkFactor * (fMax - fMin)))
+  // Expansion heuristic (make the data fill at least 1/expandFract of the y range )
+  else if ((xyChart.yMax - xyChart.yMin) > (expandFract * (fMax - fMin)))
   {
     float yRange = fMax - fMin;
     float yMid = fMin + (yRange / 2);
-    float yLimit = yRange * (shrinkFactor - 2) / 2;
+    float yLimit = yRange * (expandFract - 2) / 2;
     scaled = scaleY(yMid - yLimit, yMid + yLimit, "Y limits too large relative to Y range");
     xyChart.drawTitleChart(tft, "Z-Axis Force");
   }
-  // Centering heuristic (keep empty space differences within 40% of the y range)
+  // Centering heuristic (keep y range centered to within 40% of the y limits)
   else if (fabs((xyChart.yMax - fMax) - (fMin - xyChart.yMin)) > fabs(0.4 * (fMax - fMin)))
   {
-    scaled = scaleY(fMin - (0.5 * (fMax - fMin)), fMax + (0.5 * (fMax - fMin)), "Y range not centered");
+    float yRange = fMax - fMin;
+    float yMid = fMin + (yRange / 2);
+    float yLimit = (xyChart.yMax - xyChart.yMin);
+    scaled = scaleY(yMid - (yLimit/2), yMid + (yLimit/2), "Y range not centered");
     xyChart.drawTitleChart(tft, "Z-Axis Force");
   }
   return (scaled);
