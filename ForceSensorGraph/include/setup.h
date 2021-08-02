@@ -48,3 +48,8 @@ void doTare();
 void calibrateHandler();
 void doCalibration(TFT_ILI9341 &tft);
 void endHandler();
+void initChart();
+ChartXY::point getMinMax();
+boolean scaleY(float yMin, float yMax, String reason);
+boolean autoScale(ChartXY::point mm, ChartXY::point p);
+void initChart();

@@ -34,12 +34,6 @@ extern const int calValAddr; // What EEPROM address should store the calibration
 extern OneButton tareButton; // OneButton constructor
 extern HX711 hx711;          // HX711 constructor
 
-// Prototype declarations for functions in chart.cpp
-ChartXY::point getMinMax();
-boolean scaleY(float yMin, float yMax, String reason);
-boolean autoScale(ChartXY::point mm, ChartXY::point p);
-void initChart();
-
 // Instantiate a cppQueue to store QUEUE_LENGTH number of points
 cppQueue fQ(sizeof(ChartXY::point), QUEUE_LENGTH, FIFO);
 
@@ -91,7 +85,7 @@ void setup()
   // Initialize the chart
   initChart();
 
-  // Set x-axis offset to now (in seconds)
+  // Set x-axis (time) offset to now (in seconds)
   t_offset = millis() / 1000;
 }
 

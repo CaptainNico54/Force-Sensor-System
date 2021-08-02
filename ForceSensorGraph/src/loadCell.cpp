@@ -18,9 +18,6 @@ extern float fMean, allTimeSum, allTimeSamples, t_offset;
 OneButton tareButton(TARE_PIN, INPUT); // OneButton constructor | the button is pulled down by default
 HX711 hx711;                           // HX711 constructor
 
-// prototypes needed for functions in chart.cpp
-float initChart();
-
 // This is what happens when you short-press the tare button
 void tareHandler()
 {
@@ -46,7 +43,7 @@ void doTare()
     {
         Serial.print("Taring...");
     }
-    delay(1000);   // Let things settle for 1s before reading.
+    delay(1000);  // Let things settle for 1s before reading.
     hx711.tare(); // Take the tare reading (10 samples is default)
     if (DEBUG)
     {
@@ -106,8 +103,8 @@ void doCalibration(TFT_ILI9341 &tft)
         if (hx711.is_ready())
         {
             hx711.set_scale(calFactor);
-            kgForce = hx711.get_units(10);                   // Get a sample -> we are trying to make this value be 1000g
-            if ((kgForce < 1005) && (kgForce > 995))         // Did this calibration factor produce a 1kg +/- 0.5% output?
+            kgForce = hx711.get_units(10);           // Get a sample -> we are trying to make this value be 1000g
+            if ((kgForce < 1005) && (kgForce > 995)) // Did this calibration factor produce a 1kg +/- 0.5% output?
             {
                 converged++;         // We are one count closer to convergence
                 calSum += calFactor; // Build a sum so we can average the successful values later
@@ -145,9 +142,8 @@ void doCalibration(TFT_ILI9341 &tft)
     tft.print("\n Calibration Converged!\n Constant = ");
     tft.println(round(calAvg));
 
-    delay(5000);
+    delay(5000); // Let the user read the last onscreen msg
 
-    calibrating = false;
-
-    t_offset = initChart();
+    calibrating = false; // We are done, reset the calibration flag
+    initChart();         // Reinitialize the chart
 }

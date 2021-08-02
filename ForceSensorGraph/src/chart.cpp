@@ -19,7 +19,6 @@ void initChart()
 #endif
 
   tft.fillScreen(xyChart.tftBGColor);
-
   xyChart.setAxisLimitsX(0, XRANGE, XTICKTIME);
   xyChart.setAxisLimitsY(-100, 100, 25);
   xyChart.drawTitleChart(tft, "Z-Axis Force");
@@ -35,7 +34,7 @@ void initChart()
     xyChart.tftInfo();
   }
 
-  // Flush the queue and reseed with origin if there is already data there
+  // Flush the queue if there is already data there
   if (fQ.nbRecs())
   {
     if (DEBUG == 2)
@@ -45,6 +44,7 @@ void initChart()
     fQ.flush();
   }
 
+  // Seed the queue with the origin coords
   ChartXY::point p;
   p.x = 0.;
   p.y = 0.;
