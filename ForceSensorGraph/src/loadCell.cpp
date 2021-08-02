@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <HX711.h>
+#include <EEPROM.h>
 #include <OneButton.h>
 #include <TFT_ILI9341.h>
 #include <TFT_Charts.h>
@@ -142,6 +143,12 @@ void doCalibration(TFT_ILI9341 &tft)
     tft.print("\n Calibration Converged!\n Constant = ");
     tft.println(round(calAvg));
 
+    EEPROM.write(EEPROM_ADDR, round(calAvg));
+    if (DEBUG == 2)
+    {
+        Serial.print("Wrote calibration value = " + String(round(calAvg)) + " to EEPROM address " + String(EEPROM_ADDR));
+    }
+    
     delay(5000); // Let the user read the last onscreen msg
 
     calibrating = false; // We are done, reset the calibration flag

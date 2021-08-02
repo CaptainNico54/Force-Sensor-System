@@ -17,7 +17,7 @@ https://github.com/KrisKasprzak/GraphingFunction/blob/master/Graph.ino
 #include <HX711.h>
 #include <OneButton.h>
 #include <cppQueue.h>
-// #include <EEPROM.h>
+#include <EEPROM.h>
 #include "setup.h"
 
 // Initialize some global variables
@@ -25,10 +25,9 @@ float fMean, allTimeSum, allTimeSamples;
 float lastT = 0, t_offset = 0; // Offset for t=0 on X.
 
 // Global external variables
-extern boolean taring;       // Taring button activated?
-extern boolean calibrating;  // Calibration button activated?
-extern boolean done;         // Done calibrating?
-extern const int calValAddr; // What EEPROM address should store the calibration
+extern boolean taring;      // Taring button activated?
+extern boolean calibrating; // Calibration button activated?
+extern boolean done;        // Done calibrating?
 
 // Button and ADC objects
 extern OneButton tareButton; // OneButton constructor
@@ -68,8 +67,15 @@ void setup()
 
   // Initialize the force sensor
   hx711.begin(HX711_DOUT, HX711_SCK);
-  hx711.tare(20);      // Tare with 20 readings (default is 10)
-  hx711.set_scale(18); // This should eventually come out of EEPROM
+  hx711.tare(20); // Tare with 20 readings (default is 10)
+  int hx711Cal = EEPROM.read(EEPROM_ADDR);
+  
+  if (DEBUG == 2)
+  {
+    Serial.println("Calibration value " + String(hx711Cal) + " read from EEPROM Address " + String(EEPROM_ADDR));
+  }
+
+    hx711.set_scale(hx711Cal);
 
   if (DEBUG == 2)
   {

@@ -42,7 +42,7 @@ Look for this file in the folder .pio/libdeps/<platform>/TFT_ILI9341
 #define REFERENCE_MASS 1000 // Reference mass for calibration routine, in kg
 #define EEPROM_ADDR 1019    // use the last four bytes of the EEPROM for calibration constant
 
-// Function prototypes
+// Function prototypes - DO NOT CHANGE
 void tareHandler();
 void doTare();
 void calibrateHandler();
