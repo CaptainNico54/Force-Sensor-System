@@ -30,3 +30,5 @@ Finally and optionally, comment out this line as we find it causes stray pixels 
 
 - If you want informational messages to the serial monitor, set DEBUG = 2 at the top of setup.h.  This causes the code to block until a serial monitor is present.
 - Build/Upload the project to your board.
+
+Test
