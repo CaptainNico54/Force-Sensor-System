@@ -7,6 +7,50 @@ extern cppQueue fQ;
 extern ChartXY xyChart;
 extern TFT_ILI9341 tft;
 
+void initChart()
+{
+  // Initialize the screen
+  tft.begin();
+  xyChart.begin(tft);
+
+// Invert the screen if requested in setup.h
+#ifdef FLIP_TFT
+  tft.setRotation(1);
+#endif
+
+  tft.fillScreen(xyChart.tftBGColor);
+
+  xyChart.setAxisLimitsX(0, XRANGE, XTICKTIME);
+  xyChart.setAxisLimitsY(-100, 100, 25);
+  xyChart.drawTitleChart(tft, "Z-Axis Force");
+  xyChart.drawAxisX(tft, 10);
+  xyChart.drawAxisY(tft, 10);
+  xyChart.drawLabelsX(tft);
+  xyChart.drawLabelsY(tft);
+  xyChart.drawY0(tft);
+  delay(400); // Let noise settle
+
+  if (DEBUG == 2)
+  {
+    xyChart.tftInfo();
+  }
+
+  // Flush the queue and reseed with origin if there is already data there
+  if (fQ.nbRecs())
+  {
+    if (DEBUG == 2)
+    {
+      Serial.println("Flushing the queue...");
+    }
+    fQ.flush();
+  }
+
+  ChartXY::point p;
+  p.x = 0.;
+  p.y = 0.;
+  fQ.push(&p);
+}
+
 ChartXY::point getMinMax()
 {
   int i;
@@ -60,7 +104,7 @@ boolean autoScale(ChartXY::point mm, ChartXY::point p)
 {
   float fMin = mm.x;
   float fMax = mm.y;
-  float expandFactor = 7; // Determines the default Y range in relation to the current min/max values when expanding limits
+  float expandFactor = 7;  // Determines the default Y range in relation to the current min/max values when expanding limits
   float limitFactor = 0.1; // Determines the additional Y range added to the current min/max values when expanding limits
   boolean scaled = false;
 
@@ -95,7 +139,7 @@ boolean autoScale(ChartXY::point mm, ChartXY::point p)
     float yRange = fMax - fMin;
     float yMid = fMin + (yRange / 2);
     float yLimit = (xyChart.yMax - xyChart.yMin);
-    scaled = scaleY(yMid - (yLimit/2), yMid + (yLimit/2), "Y range not centered");
+    scaled = scaleY(yMid - (yLimit / 2), yMid + (yLimit / 2), "Y range not centered");
     xyChart.drawTitleChart(tft, "Z-Axis Force");
   }
   return (scaled);

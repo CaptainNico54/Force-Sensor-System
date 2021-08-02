@@ -38,6 +38,7 @@ extern HX711 hx711;          // HX711 constructor
 ChartXY::point getMinMax();
 boolean scaleY(float yMin, float yMax, String reason);
 boolean autoScale(ChartXY::point mm, ChartXY::point p);
+void initChart();
 
 // Instantiate a cppQueue to store QUEUE_LENGTH number of points
 cppQueue fQ(sizeof(ChartXY::point), QUEUE_LENGTH, FIFO);
@@ -87,37 +88,10 @@ void setup()
   tareButton.attachLongPressStart(calibrateHandler);
   tareButton.attachDoubleClick(endHandler);
 
-  // Seed the queue with the first point of the first line (origin)
-  ChartXY::point p;
-  p.x = 0.;
-  p.y = 0.;
-  fQ.push(&p);
+  // Initialize the chart
+  initChart();
 
-  // Initialize the screen
-  tft.begin();
-  xyChart.begin(tft);
-
-// Invert the screen if requested in setup.h
-#ifdef FLIP_TFT
-  tft.setRotation(1);
-#endif
-
-  tft.fillScreen(BLACK);
-  if (DEBUG == 2)
-  {
-    xyChart.tftInfo();
-  }
-  xyChart.setAxisLimitsX(0, XRANGE, XTICKTIME);
-  xyChart.setAxisLimitsY(-100, 100, 25);
-  xyChart.drawTitleChart(tft, "Z-Axis Force");
-  xyChart.drawAxisX(tft, 10);
-  xyChart.drawAxisY(tft, 10);
-  xyChart.drawLabelsX(tft);
-  xyChart.drawLabelsY(tft);
-  xyChart.drawY0(tft);
-  delay(400); // Let noise settle
-
-  // We are now at t=0. Set x-axis offset to now (in seconds)
+  // Set x-axis offset to now (in seconds)
   t_offset = millis() / 1000;
 }
 
@@ -145,6 +119,10 @@ void loop(void)
   {
     done = false;
     doCalibration(tft);
+
+    // Reset stats and time
+    t_offset = millis() / 1000;
+    lastT = allTimeSamples = allTimeSum = fMean = 0;
   }
 
   // Get smoothed value from the dataset:
@@ -155,12 +133,12 @@ void loop(void)
     {
       p.y = hx711.get_units();                   // Read the load cell value as a float (4 bytes on 8-bit AVRs)
       p.x = (float(millis()) / 1000 - t_offset); // Elapsed time in seconds.  (Why must I cast millis() here?)
-      #ifdef INVERT_Y
-        p.y = -p.y; // Invert the hx711 reading - this is dependent on the orientation.
-      #endif
+#ifdef INVERT_Y
+      p.y = -p.y; // Invert the hx711 reading - this is dependent on the orientation.
+#endif
 
       // Check for an outlier (presumed glitch/noise)
-      if ( fabs(p.y) > 20000)
+      if (fabs(p.y) > 20000)
       {
         if (DEBUG == 2)
         {
@@ -192,18 +170,19 @@ void loop(void)
         fMin = p0.x;
         fMax = p0.y;              // Work out the min/max values we have in the queue
         noise = autoScale(p0, p); // Autoscale the data in Y
+
+        // Draw a live legend with current/min/max/mean values
+        legend = "Curr:" + String(p.y, 1) + "    ";
+        xyChart.drawLegend(tft, legend, 230, 0, 1, YELLOW);
+        legend = " Max:" + String(fMax, 1) + "    ";
+        xyChart.drawLegend(tft, legend, 230, 10, 1, RED);
+        legend = "Mean:" + String(fMean, 1) + "    ";
+        xyChart.drawLegend(tft, legend, 230, 20, 1, GREEN);
+        legend = " Min:" + String(fMin, 1) + "    ";
+        xyChart.drawLegend(tft, legend, 230, 30, 1, BLUE);
+
+        legend = "";
       }
-      // Draw a live legend with current/min/max/mean values
-      legend = "Curr:" + String(p.y, 1) + "    ";
-      xyChart.drawLegend(tft, legend, 230, 0, 1, YELLOW);
-      legend = " Max:" + String(fMax, 1) + "    ";
-      xyChart.drawLegend(tft, legend, 230, 10, 1, RED);
-      legend = "Mean:" + String(fMean, 1) + "    ";
-      xyChart.drawLegend(tft, legend, 230, 20, 1, DKORANGE);
-      legend = " Min:" + String(fMin, 1) + "    ";
-      xyChart.drawLegend(tft, legend, 230, 30, 1, GREEN);
-    
-      legend = "";
 
       // Check if the queue is full
       if (fQ.isFull())

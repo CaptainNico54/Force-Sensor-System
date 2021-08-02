@@ -13,10 +13,13 @@ boolean done;                // Done calibrating?
 // External globals for the chart object
 extern TFT_ILI9341 tft;
 extern ChartXY xyChart;
-extern float fMean, allTimeSum, allTimeSamples;
+extern float fMean, allTimeSum, allTimeSamples, t_offset;
 
 OneButton tareButton(TARE_PIN, INPUT); // OneButton constructor | the button is pulled down by default
 HX711 hx711;                           // HX711 constructor
+
+// prototypes needed for functions in chart.cpp
+float initChart();
 
 // This is what happens when you short-press the tare button
 void tareHandler()
@@ -145,4 +148,6 @@ void doCalibration(TFT_ILI9341 &tft)
     delay(5000);
 
     calibrating = false;
+
+    t_offset = initChart();
 }
