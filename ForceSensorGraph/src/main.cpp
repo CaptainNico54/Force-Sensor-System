@@ -44,6 +44,8 @@ ChartXY xyChart; // ChartXY constructor
 
 void setup()
 {
+  uint8_t hx711Cal;
+
   if (DEBUG)
   {
     Serial.begin(9600);
@@ -68,14 +70,22 @@ void setup()
   // Initialize the force sensor
   hx711.begin(HX711_DOUT, HX711_SCK);
   hx711.tare(20); // Tare with 20 readings (default is 10)
-  int hx711Cal = EEPROM.read(EEPROM_ADDR);
-  
+
+#ifdef OVERRIDE_CALIBRATION
+  hx711Cal = OVERRIDE_CALIBRATION;
+  if (DEBUG == 2)
+  {
+    Serial.println("Calibration overridden with value " + String(hx711Cal));
+  }
+#else
+  hx711Cal = EEPROM.read(EEPROM_ADDR);
   if (DEBUG == 2)
   {
     Serial.println("Calibration value " + String(hx711Cal) + " read from EEPROM Address " + String(EEPROM_ADDR));
   }
+#endif
 
-    hx711.set_scale(hx711Cal);
+  hx711.set_scale(hx711Cal);
 
   if (DEBUG == 2)
   {
