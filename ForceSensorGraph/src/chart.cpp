@@ -1,21 +1,25 @@
-#include <TFT_Charts.h>
-#include <TFT_ILI9341.h>
+#include <TFT_eSPI_Charts.h>
+#include <TFT_eSPI.h>
 #include <cppQueue.h>
 #include "setup.h"
 
 extern cppQueue fQ;
 extern ChartXY xyChart;
-extern TFT_ILI9341 tft;
+extern TFT_eSPI tft;
 
 void initChart()
 {
   // Initialize the screen
-  tft.begin();
+  if( DEBUG == 2){
+    Serial.println("Initializing screen...");
+  }
+  TFT_eSPI tft = TFT_eSPI();
+  tft.init();
   xyChart.begin(tft);
 
 // Invert the screen if requested in setup.h
 #ifdef FLIP_TFT
-  tft.setRotation(1);
+  tft.setRotation(3);
 #endif
 
   tft.fillScreen(xyChart.tftBGColor);
@@ -88,6 +92,7 @@ boolean scaleY(float yMin, float yMax, String reason)
     Serial.println("Current Y limits: " + String(xyChart.yMin) + ", " + String(xyChart.yMax));
     Serial.println("Scaling Y to range " + String(yMin) + ", " + String(yMax));
   }
+  tft.setRotation(1);
   tft.fillScreen(xyChart.tftBGColor);
   xyChart.setAxisLimitsY(yMin, yMax, (yMax - yMin) / 8);
   xyChart.drawAxisY(tft, 10);

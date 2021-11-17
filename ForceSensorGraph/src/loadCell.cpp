@@ -1,9 +1,8 @@
-#include <Arduino.h>
 #include <HX711.h>
-#include <EEPROM.h>
+#include <hardware/flash.h>
 #include <OneButton.h>
-#include <TFT_ILI9341.h>
-#include <TFT_Charts.h>
+#include <TFT_eSPI.h>
+#include <TFT_eSPI_Charts.h>
 #include "setup.h"
 
 // Global variables to accumulate all-time (between tares) mean force, and handle button state
@@ -12,11 +11,11 @@ boolean calibrating = false; // Calibration button activated?
 boolean done;                // Done calibrating?
 
 // External globals for the chart object
-extern TFT_ILI9341 tft;
+extern TFT_eSPI tft;
 extern ChartXY xyChart;
 extern float fMean, allTimeSum, allTimeSamples, t_offset;
 
-OneButton tareButton(TARE_PIN, INPUT); // OneButton constructor | the button is pulled down by default
+OneButton tareButton(TARE_PIN); // OneButton constructor | the button is pulled down by default
 HX711 hx711;                           // HX711 constructor
 
 // This is what happens when you short-press the tare button
@@ -54,7 +53,7 @@ void doTare()
 }
 
 // This should happen when calibrating == true
-void doCalibration(TFT_ILI9341 &tft)
+void doCalibration(TFT_eSPI &tft)
 {
 
     // Initialize the double-click variable to false
@@ -143,10 +142,10 @@ void doCalibration(TFT_ILI9341 &tft)
     tft.print("\n Calibration Converged!\n Constant = ");
     tft.println(round(calAvg));
 
-    EEPROM.write(EEPROM_ADDR, round(calAvg));
+    // EEPROM.write(EEPROM_ADDR, round(calAvg));
     if (DEBUG == 2)
     {
-        Serial.print("Wrote calibration value = " + String(round(calAvg)) + " to EEPROM address " + String(EEPROM_ADDR));
+        // Serial.print("Wrote calibration value = " + String(round(calAvg)) + " to EEPROM address " + String(EEPROM_ADDR));
     }
     
     delay(5000); // Let the user read the last onscreen msg

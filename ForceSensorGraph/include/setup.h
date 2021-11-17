@@ -1,33 +1,16 @@
 // Which version of the PCB do you have?
-//#define PCBV1
-#define PCBV2
+#define PCBV3
 
-/*   #############   IMPORTANT - ACTION REQUIRED!!!!   ##############
-The constructor for the TFT_ILI9341 object uses hardwired values for the SPI pins.
-So, currently these must be set in the User_Setup.h file that comes with the library.
-For the latest board (PCBV2), TFT_DC == 8; TFT_RST == 9; TFT_CS == 10.
-For the older board (PCBV1), TFT_DC == SDA; TFT_RST == -1; TFT_CS == SCL.
-ALSO: You must comment out FAST_LINE, and all the fonts except for LOAD_GLCD
-Look for this file in the folder .pio/libdeps/<platform>/TFT_ILI9341
-*/
-
-#ifdef PCBV1
-#define HX711_DOUT A1
-#define HX711_SCK A0
-#define TARE_PIN 13
-#endif
-
-#ifdef PCBV2
-#define HX711_DOUT 1
-#define HX711_SCK 0
-#define TARE_PIN 13
-#define LCD_SPI_EN 5 // Drive LCD_SPI_EN low to enable the 5V -> 3.3V logic converters
+#ifdef PCBV3
+#define HX711_DOUT 19
+#define HX711_SCK 18
+#define TARE_PIN 1
 #endif
 
 // If DEBUG is anything but zero, the program will block until a serial monitor is attached/open
 // Set to 1 to get force sensor values on the serial monitor
 // Set to 2 to get more detailed program status
-#define DEBUG 0
+#define DEBUG 2
 
 // Screen orientation - uncomment the next line to invert the LCD
 // #define FLIP_TFT
@@ -40,14 +23,16 @@ Look for this file in the folder .pio/libdeps/<platform>/TFT_ILI9341
 #define XRANGE 35               // How many seconds does the X axis represent?
 #define XTICKTIME 5             // How many seconds between X tick marks?
 #define REFERENCE_MASS 1000     // Reference mass for calibration routine, in g
-#define EEPROM_ADDR 1019        // use the last four bytes of the EEPROM for calibration constant
-// #define OVERRIDE_CALIBRATION 10 // Override the EEPROM calibration value with this one
+
+// use the last sector of the flash for calibration constant
+#define FLASH_OFFSET (PICO_FLASH_SIZE_BYTES - FLASH_SECTOR_SIZE)
+#define OVERRIDE_CALIBRATION 10 // Override the FLASH calibration value with this one
 
 // Function prototypes - DO NOT CHANGE
 void tareHandler();
 void doTare();
 void calibrateHandler();
-void doCalibration(TFT_ILI9341 &tft);
+void doCalibration(TFT_eSPI &tft);
 void endHandler();
 void initChart();
 ChartXY::point getMinMax();

@@ -13,11 +13,11 @@ https://github.com/KrisKasprzak/GraphingFunction/blob/master/Graph.ino
 */
 
 #include <Arduino.h>
-#include <TFT_Charts.h>
+#include <TFT_eSPI_Charts.h>
 #include <HX711.h>
 #include <OneButton.h>
 #include <cppQueue.h>
-#include <EEPROM.h>
+#include <hardware/flash.h>
 #include "setup.h"
 
 // Initialize some global variables
@@ -36,9 +36,9 @@ extern HX711 hx711;          // HX711 constructor
 // Instantiate a cppQueue to store QUEUE_LENGTH number of points
 cppQueue fQ(sizeof(ChartXY::point), QUEUE_LENGTH, FIFO);
 
-// ILI9341 constructor: This library takes width/height for the arguments.
-// Hardware SPI pins are required, and are read from TFT_ILI9341/User_Setup.h
-TFT_ILI9341 tft = TFT_ILI9341(320, 240);
+// TFT_eSPI constructor
+// Hardware SPI pins are required, and are read from 
+TFT_eSPI tft = TFT_eSPI();
 
 ChartXY xyChart; // ChartXY constructor
 
@@ -59,12 +59,6 @@ void setup()
     Serial.println(" points.");
   }
 
-#ifdef PCBV2
-  // Drive LCD_SPI_EN to 0V, to enable the onboard 5V -> 3.3V logic converters
-  pinMode(LCD_SPI_EN, OUTPUT);
-  digitalWrite(LCD_SPI_EN, LOW);
-#endif
-
   fMean = allTimeSum = allTimeSamples = 0; // Initialize fMean
 
   // Initialize the force sensor
@@ -78,10 +72,10 @@ void setup()
     Serial.println("Calibration overridden with value " + String(hx711Cal));
   }
 #else
-  hx711Cal = EEPROM.read(EEPROM_ADDR);
+  // hx711Cal = EEPROM.read(EEPROM_ADDR);
   if (DEBUG == 2)
   {
-    Serial.println("Calibration value " + String(hx711Cal) + " read from EEPROM Address " + String(EEPROM_ADDR));
+    // Serial.println("Calibration value " + String(hx711Cal) + " read from EEPROM Address " + String(EEPROM_ADDR));
   }
 #endif
 
@@ -148,7 +142,7 @@ void loop(void)
 #endif
 
       // Check for an outlier (presumed glitch/noise)
-      if (fabs(p.y) > 20000)
+      if (fabs(p.y) > 15000)
       {
         if (DEBUG == 2)
         {
