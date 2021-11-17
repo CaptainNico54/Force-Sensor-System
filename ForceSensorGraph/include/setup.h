@@ -13,7 +13,7 @@
 #define DEBUG 0
 
 // Specify the screen orientation - Landscape is 1 or 3 on ILI9341
-#define CHART_ORIENTATION 1
+#define CHART_ORIENTATION 3
 
 // Comment the next line in/out to invert the sign of the load cell values
 // #define INVERT_Y
