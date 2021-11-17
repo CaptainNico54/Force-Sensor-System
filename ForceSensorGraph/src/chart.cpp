@@ -15,13 +15,9 @@ void initChart()
   }
   TFT_eSPI tft = TFT_eSPI();
   tft.init();
-  xyChart.begin(tft);
+  xyChart.begin(tft, CHART_ORIENTATION);
 
-// Invert the screen if requested in setup.h
-#ifdef FLIP_TFT
-  tft.setRotation(3);
-#endif
-
+  tft.setRotation(CHART_ORIENTATION);
   tft.fillScreen(xyChart.tftBGColor);
   xyChart.setAxisLimitsX(0, XRANGE, XTICKTIME);
   xyChart.setAxisLimitsY(-100, 100, 25);
@@ -92,7 +88,8 @@ boolean scaleY(float yMin, float yMax, String reason)
     Serial.println("Current Y limits: " + String(xyChart.yMin) + ", " + String(xyChart.yMax));
     Serial.println("Scaling Y to range " + String(yMin) + ", " + String(yMax));
   }
-  tft.setRotation(1);
+
+  tft.setRotation(CHART_ORIENTATION);
   tft.fillScreen(xyChart.tftBGColor);
   xyChart.setAxisLimitsY(yMin, yMax, (yMax - yMin) / 8);
   xyChart.drawAxisY(tft, 10);
