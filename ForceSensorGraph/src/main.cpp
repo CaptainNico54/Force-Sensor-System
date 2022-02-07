@@ -94,6 +94,7 @@ void setup()
 
   // Initialize the chart
   initChart();
+  xyChart.tftInfo();
 
   // Set x-axis (time) offset to now (in seconds)
   t_offset = millis() / 1000;
@@ -165,7 +166,9 @@ void loop(void)
 
       if (DEBUG)
       {
-        Serial.println(p.y);
+        char buf[10];
+        sprintf(buf, "%8.1f", p.y);
+        Serial.println(buf);
       }
 
       if (fQ.getCount() > 20)

@@ -16,7 +16,7 @@ void initChart()
   TFT_eSPI tft = TFT_eSPI();
   tft.init();
   xyChart.begin(tft, CHART_ORIENTATION);
-
+ 
   tft.setRotation(CHART_ORIENTATION);
   tft.fillScreen(xyChart.tftBGColor);
   xyChart.setAxisLimitsX(0, XRANGE, XTICKTIME);
