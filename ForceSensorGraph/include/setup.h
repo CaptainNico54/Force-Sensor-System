@@ -10,7 +10,7 @@
 // If DEBUG is anything but zero, the program will block until a serial monitor is attached/open
 // Set to 1 to get force sensor values on the serial monitor
 // Set to 2 to get more detailed program status
-#define DEBUG 1
+#define DEBUG 2
 
 // Specify the screen orientation - Landscape is 1 or 3 on ILI9341
 #define CHART_ORIENTATION 1
@@ -26,10 +26,14 @@
 #define MIN_Y_RANGE 200     // Minimum value for the Y-axis range (+/- this value)
 
 // use the last sector of the flash for calibration constant
-#define FLASH_OFFSET (PICO_FLASH_SIZE_BYTES - FLASH_SECTOR_SIZE)
-#define OVERRIDE_CALIBRATION 10 // Override the FLASH calibration value with this one
+#define FLASH_TARGET_OFFSET (PICO_FLASH_SIZE_BYTES - FLASH_SECTOR_SIZE)
+#define DEFAULT_CALIBRATION 100 // If no calibration is stored in flash, use this
+// #define OVERRIDE_CALIBRATION 10 // Uncommenting overrides any calibration value with this one
 
 // Function prototypes - DO NOT CHANGE
+int getCalibrationPage();
+int getCalibration();
+void writeCalibration(int cal);
 void tareHandler();
 void doTare();
 void calibrateHandler();

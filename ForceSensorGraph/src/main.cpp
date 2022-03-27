@@ -17,7 +17,6 @@ https://github.com/KrisKasprzak/GraphingFunction/blob/master/Graph.ino
 #include <HX711.h>
 #include <OneButton.h>
 #include <cppQueue.h>
-#include <hardware/flash.h>
 #include "setup.h"
 
 // Initialize some global variables
@@ -72,11 +71,7 @@ void setup()
     Serial.println("Calibration overridden with value " + String(hx711Cal));
   }
 #else
-  // hx711Cal = EEPROM.read(EEPROM_ADDR);
-  if (DEBUG == 2)
-  {
-    // Serial.println("Calibration value " + String(hx711Cal) + " read from EEPROM Address " + String(EEPROM_ADDR));
-  }
+  hx711Cal = getCalibration();
 #endif
 
   hx711.set_scale(hx711Cal);
