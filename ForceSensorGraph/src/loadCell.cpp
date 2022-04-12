@@ -38,7 +38,7 @@ int getCalibrationPage()
             Serial.print(" (address 0x" + (String(int(p), HEX)) + ") = ");
             Serial.println(*p);
         }
-        // The first four bytes will be the int -1 if the value is all 0xFFFFFF...
+        // The first four bytes will be -1 if the values are 0xFFFFFFFF...
         if( *p == -1){
             if( DEBUG == 2){
                 Serial.println( "Latest calibration found at page #" + String(page-1, DEC));
@@ -144,6 +144,8 @@ void doCalibration(TFT_eSPI &tft)
     done = false;
 
     float calFactor, calSum, calAvg, kgForce;
+    float ccut = 0.005;
+    int ctries = 0;
     int converged = 0;
 
     if (DEBUG)
@@ -184,11 +186,18 @@ void doCalibration(TFT_eSPI &tft)
     // Calibration scale minimizer/de-noiser
     while (converged < 10)
     {
+        ctries++;
+        if (ctries > 25)
+        {
+            ccut += .005;
+        }
         if (hx711.is_ready())
         {
             hx711.set_scale(calFactor);
-            kgForce = hx711.get_units(10);           // Get a sample -> we are trying to make this value be 1000g
-            if ((kgForce < 1005) && (kgForce > 995)) // Did this calibration factor produce a 1kg +/- 0.5% output?
+            // Get a sample -> we are trying to make this value be 1000g
+            kgForce = hx711.get_units(10); 
+             // Did this calibration factor produce a 1kg +/- 0.5% output?          
+            if ((kgForce < (1000 * (1 + ccut))) && (kgForce > (1000 * (1 - ccut))))
             {
                 converged++;         // We are one count closer to convergence
                 calSum += calFactor; // Build a sum so we can average the successful values later
@@ -206,7 +215,7 @@ void doCalibration(TFT_eSPI &tft)
             {
                 Serial.print("get_units returned ");
                 Serial.println(kgForce);
-                Serial.print("Trying new calFactor = ");
+                Serial.print("Trying new calibratoin constant = ");
                 Serial.println(calFactor);
             }
         }
