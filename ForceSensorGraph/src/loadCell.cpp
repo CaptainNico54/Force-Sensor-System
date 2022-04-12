@@ -189,6 +189,7 @@ void doCalibration(TFT_eSPI &tft)
         ctries++;
         if (ctries > 25)
         {
+            ctries = 0;
             ccut += .005;
         }
         if (hx711.is_ready())
