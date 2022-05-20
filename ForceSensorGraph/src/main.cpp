@@ -159,11 +159,16 @@ void loop(void)
         Serial.print(", ");
       }
 
-      if (DEBUG)
+      if (DEBUG == 1)
       {
-        char buf[10];
-        sprintf(buf, "%8.1f", p.y);
-        Serial.println(buf);
+        // char buf[10];
+        // sprintf(buf, "%8.1f", p.y);
+        Serial.print(p.y);
+      }else{
+        if (DEBUG == 2)
+        {
+          Serial.println(p.y);
+        }
       }
 
       if (fQ.getCount() > 20)
