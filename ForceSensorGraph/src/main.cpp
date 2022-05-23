@@ -51,11 +51,13 @@ void setup()
     // Wait until a serial monitor comes online
     while (!Serial)
       ;
-    Serial.println();
-    Serial.println("Starting...");
-    Serial.print("Queue size is ");
-    Serial.print(QUEUE_LENGTH);
-    Serial.println(" points.");
+    if( DEBUG == 2){
+      Serial.println();
+      Serial.println("Starting...");
+      Serial.print("Queue size is ");
+      Serial.print(QUEUE_LENGTH);
+      Serial.println(" points.");
+    }
   }
 
   fMean = allTimeSum = allTimeSamples = 0; // Initialize fMean
@@ -89,7 +91,6 @@ void setup()
 
   // Initialize the chart
   initChart();
-  xyChart.tftInfo();
 
   // Set x-axis (time) offset to now (in seconds)
   t_offset = millis() / 1000;
