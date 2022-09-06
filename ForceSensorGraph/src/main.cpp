@@ -110,7 +110,7 @@ void loop(void)
   if( Serial.available())
   {
     char serdata = Serial.read();  
-    if( serdata == 1)
+    if( serdata == '1')
     {
       serdata = NULL;
       doTare();
