@@ -106,6 +106,17 @@ void loop(void)
   boolean scrolling = false, noise = false;
   String legend;
 
+  //Check the serial port for input, to trigger a tare event
+  if( Serial.available())
+  {
+    char serdata = Serial.read();  
+    if( serdata == 1)
+    {
+      serdata = NULL;
+      doTare()
+    }
+  }
+
   tareButton.tick(); // Check the tare button
 
   // Single click
