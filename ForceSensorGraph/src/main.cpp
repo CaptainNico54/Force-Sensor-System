@@ -113,7 +113,7 @@ void loop(void)
     if( serdata == 1)
     {
       serdata = NULL;
-      doTare()
+      doTare();
     }
   }
 
