@@ -112,7 +112,7 @@ void loop(void)
     char serdata = Serial.read();  
     if( serdata == '1')
     {
-      serdata = NULL;
+      serdata = (char) 0;
       doTare();
     }
   }
