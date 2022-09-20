@@ -35,7 +35,7 @@ int getCalibrationPage();
 int getCalibration();
 void writeCalibration(int cal);
 void tareHandler();
-void doTare();
+void doTare(uint8_t dt);
 void calibrateHandler();
 void doCalibration(TFT_eSPI &tft);
 void endHandler();

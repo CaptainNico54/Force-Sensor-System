@@ -120,14 +120,14 @@ void endHandler()
     done = true;
 }
 
-// This should happen when taring == true
-void doTare()
+// This should happen when taring == true;  dt is a delay in seconds
+void doTare(uint8_t dt)
 {
     if (DEBUG)
     {
         Serial.print("Taring...");
     }
-    delay(1000);  // Let things settle for 1s before reading.
+    delay((dt * 1000));  // Let things settle for 1s before reading.
     hx711.tare(); // Take the tare reading (10 samples is default)
     if (DEBUG)
     {

@@ -113,7 +113,7 @@ void loop(void)
     if( serdata == '1')
     {
       serdata = (char) 0;
-      doTare();
+      doTare(0);
     }
   }
 
@@ -123,7 +123,7 @@ void loop(void)
   if (taring)
   {
     taring = false;
-    doTare();
+    doTare(1);
   }
 
   // Long press
