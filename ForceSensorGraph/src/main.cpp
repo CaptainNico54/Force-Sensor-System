@@ -45,6 +45,9 @@ void setup()
 {
   uint8_t hx711Cal;
 
+  // Attempt to reduce ADC noise (https://youtu.be/F0o1C7nEgw0?si=KocGF8g-lJ3rrYsT&t=449)
+  // digitalWrite(23, HIGH);
+    
   if (DEBUG)
   {
     Serial.begin(9600);
@@ -58,6 +61,7 @@ void setup()
       Serial.print(QUEUE_LENGTH);
       Serial.println(" points.");
     }
+    
   }
 
   fMean = allTimeSum = allTimeSamples = 0; // Initialize fMean

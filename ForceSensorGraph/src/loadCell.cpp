@@ -127,7 +127,7 @@ void doTare(uint8_t dt)
     {
         Serial.print("Taring...");
     }
-    delay((dt * 1000));  // Let things settle for 1s before reading.
+    delay((dt * 1000));  // Let things settle for dt seconds before reading.
     hx711.tare(); // Take the tare reading (10 samples is default)
     if (DEBUG)
     {
